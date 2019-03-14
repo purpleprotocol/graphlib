@@ -76,7 +76,7 @@ impl<'a, T> Dfs<'a, T> {
                 break;
             }
 
-            let mut mark = true;
+            let mut all_are_black = true;
 
             // Traverse current neighbors
             for n in self.iterable.out_neighbors(current.as_ref()) {   
@@ -86,16 +86,17 @@ impl<'a, T> Dfs<'a, T> {
                     self.recursion_stack.push(current.clone());
                     self.recursion_stack.push(reference.clone());
                     self.color_map.insert(reference, Color::Grey);
-                    mark = false;
+                    all_are_black = false;
                     break;
                 } 
 
+                // This means there is a cycle
                 if let Some(Color::Grey) = self.color_map.get(&reference) {
                     return true;
                 }                
             }
 
-            if mark {
+            if all_are_black {
                 self.color_map.insert(current.clone(), Color::Black);
             }
 

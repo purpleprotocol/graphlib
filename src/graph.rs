@@ -404,11 +404,6 @@ impl<T> Graph<T> {
     /// let v2 = graph.add_vertex(1);
     /// let v3 = graph.add_vertex(2);
     /// let v4 = graph.add_vertex(3);
-    /// 
-    /// println!("V1: {:?}", v1);
-    /// println!("V2: {:?}", v2);
-    /// println!("V3: {:?}", v3);
-    /// println!("V4: {:?}", v4);
     ///
     /// graph.add_edge(&v1, &v2).unwrap();
     /// graph.add_edge(&v2, &v3).unwrap();
