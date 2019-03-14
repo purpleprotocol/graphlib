@@ -1,4 +1,6 @@
-## Graphlib 
+# Graphlib 
+[![Build Status](https://travis-ci.org/purpleprotocol/graphlib.svg?branch=master)](https://travis-ci.org/purpleprotocol/graphlib)
+
 Graphlib is a simple and powerful rust library for the graph data-structure that is optimized for high churn environments (where the graph mutates often). It provides a simple api for manipulating and for interacting with graphs.
 
 ### Usage
