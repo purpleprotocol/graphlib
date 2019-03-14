@@ -383,7 +383,7 @@ impl<T> Graph<T> {
     /// 
     /// assert_eq!(result, 6);
     /// ```
-    pub fn fold<A>(&mut self, initial: A, fun: impl Fn(&T, A) -> A) -> A {
+    pub fn fold<A>(&self, initial: A, fun: impl Fn(&T, A) -> A) -> A {
         let mut acc = initial;
 
         for v in self.dfs() {
