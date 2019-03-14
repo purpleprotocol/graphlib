@@ -1,5 +1,5 @@
 # Graphlib 
-[![Build Status](https://travis-ci.org/purpleprotocol/graphlib.svg?branch=master)](https://travis-ci.org/purpleprotocol/graphlib)
+[![Build Status](https://travis-ci.org/purpleprotocol/graphlib.svg?branch=master)](https://travis-ci.org/purpleprotocol/graphlib) [![Latest Version]][crates.io] [![Documentation]][docs.rs]
 
 Graphlib is a simple and powerful rust library for the graph data-structure that is optimized for high churn environments (where the graph mutates often). It provides a simple api for manipulating and for interacting with graphs.
 
@@ -29,3 +29,8 @@ graph.remove(&id1);
 assert_eq!(graph.vertex_count(), 1);
 assert_eq!(graph.edge_count(), 0);
 ```
+
+[crates.io]: https://crates.io/crates/graphlib
+[Latest Version]: https://img.shields.io/crates/v/graphlib.svg
+[Documentation]: https://docs.rs/graphlib/badge.svg
+[docs.rs]: https://docs.rs/graphlib
