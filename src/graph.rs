@@ -1,15 +1,15 @@
 // Copyright 2019 Octavian Oncescu
 
 use crate::edge::Edge;
-use crate::vertex_id::VertexId;
 use crate::iterators::{Bfs, Dfs, VertexIter};
+use crate::vertex_id::VertexId;
 use hashbrown::HashMap;
 use std::sync::Arc;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum GraphErr {
     NoSuchVertex,
-    CannotAddEdge
+    CannotAddEdge,
 }
 
 #[derive(Clone, Debug)]
@@ -46,11 +46,11 @@ impl<T> Graph<T> {
     /// ```
     pub fn add_vertex(&mut self, item: T) -> VertexId {
         let id = VertexId::random();
-        let id_ptr = Arc::new(id.clone()); 
+        let id_ptr = Arc::new(id);
 
         self.vertices.insert(id_ptr.clone(), (item, id_ptr.clone()));
         self.roots.push(id_ptr);
-        
+
         id
     }
 
@@ -81,7 +81,7 @@ impl<T> Graph<T> {
         if self.has_edge(a, b) {
             return Ok(());
         }
-        
+
         let a_prime = self.vertices.get(a);
         let b_prime = self.vertices.get(b);
 
@@ -102,7 +102,8 @@ impl<T> Graph<T> {
                         self.outbound_table.insert(id_ptr1.clone(), outbounds);
                     }
                     None => {
-                        self.outbound_table.insert(id_ptr1.clone(), vec![id_ptr2.clone()]);
+                        self.outbound_table
+                            .insert(id_ptr1.clone(), vec![id_ptr2.clone()]);
                     }
                 }
 
@@ -115,16 +116,13 @@ impl<T> Graph<T> {
                         self.inbound_table.insert(id_ptr2.clone(), inbounds);
                     }
                     None => {
-                        self.inbound_table.insert(id_ptr2.clone(), vec![id_ptr1.clone()]);
+                        self.inbound_table
+                            .insert(id_ptr2.clone(), vec![id_ptr1.clone()]);
                     }
                 }
 
                 // Remove outbound vertex from roots
-                self.roots = self.roots
-                    .iter()
-                    .filter(|v| ***v != *b)
-                    .map(|v| v.clone())
-                    .collect();
+                self.roots = self.roots.iter().filter(|v| ***v != *b).cloned().collect();
 
                 Ok(())
             }
@@ -134,7 +132,7 @@ impl<T> Graph<T> {
 
     /// Checks whether or not exists an edge between
     /// the vertices with the given ids.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -144,20 +142,16 @@ impl<T> Graph<T> {
     /// let v1 = graph.add_vertex(1);
     /// let v2 = graph.add_vertex(2);
     /// let v3 = graph.add_vertex(3);
-    /// 
+    ///
     /// graph.add_edge(&v1, &v2).unwrap();
-    /// 
+    ///
     /// assert!(graph.has_edge(&v1, &v2));
     /// assert!(!graph.has_edge(&v2, &v3));
     /// ```
     pub fn has_edge(&self, a: &VertexId, b: &VertexId) -> bool {
         match self.outbound_table.get(a) {
-            Some(outbounds) => {
-                outbounds
-                    .iter()
-                    .any(|v| *b == **v)
-            },
-            None => false
+            Some(outbounds) => outbounds.iter().any(|v| *b == **v),
+            None => false,
         }
     }
 
@@ -204,7 +198,7 @@ impl<T> Graph<T> {
         self.vertices.len()
     }
 
-    /// Attempts to fetch a reference to an item placed 
+    /// Attempts to fetch a reference to an item placed
     /// in the graph using the provided `VertexId`.
     ///
     /// ## Example
@@ -225,7 +219,7 @@ impl<T> Graph<T> {
         }
     }
 
-    /// Attempts to fetch a mutable reference to an item placed 
+    /// Attempts to fetch a mutable reference to an item placed
     /// in the graph using the provided `VertexId`.
     ///
     /// ## Example
@@ -236,10 +230,10 @@ impl<T> Graph<T> {
     /// let id = graph.add_vertex(1);
     ///
     /// assert_eq!(*graph.fetch(&id).unwrap(), 1);
-    /// 
+    ///
     /// // Fetch a mutable reference
     /// let v = graph.fetch_mut(&id).unwrap();
-    /// 
+    ///
     /// // Mutate vertex value
     /// *v = 2;
     ///
@@ -255,7 +249,7 @@ impl<T> Graph<T> {
     }
 
     /// Removes a vertex that matches the given `VertexId`.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -270,7 +264,7 @@ impl<T> Graph<T> {
     /// graph.remove(&v2);
     /// graph.remove(&v2);
     /// graph.remove(&v2);
-    /// 
+    ///
     /// assert_eq!(graph.vertex_count(), 2);
     /// ```
     pub fn remove(&mut self, id: &VertexId) {
@@ -290,7 +284,7 @@ impl<T> Graph<T> {
     }
 
     /// Removes the specified edge from the graph.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -305,14 +299,14 @@ impl<T> Graph<T> {
     /// graph.add_edge(&v1, &v2).unwrap();
     /// graph.add_edge(&v2, &v3).unwrap();
     /// graph.add_edge(&v3, &v4).unwrap();
-    /// 
+    ///
     /// assert_eq!(graph.edge_count(), 3);
-    /// 
+    ///
     /// // The remove edge operation is idempotent
     /// graph.remove_edge(&v2, &v3);
     /// graph.remove_edge(&v2, &v3);
     /// graph.remove_edge(&v2, &v3);
-    /// 
+    ///
     /// assert_eq!(graph.edge_count(), 2);
     /// ```
     pub fn remove_edge(&mut self, a: &VertexId, b: &VertexId) {
@@ -321,7 +315,7 @@ impl<T> Graph<T> {
         if let Some(outbounds) = self.outbound_table.get_mut(a) {
             outbounds.retain(|v| *v.as_ref() != *b);
             remove = true;
-        } 
+        }
 
         // If outbound vertex doesn't have any more inbounds,
         // mark it as root.
@@ -332,11 +326,11 @@ impl<T> Graph<T> {
         if remove {
             self.edges.retain(|e| !e.matches(a, b));
         }
-    } 
+    }
 
     /// Iterates through the graph and only keeps
     /// vertices that match the given condition.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -350,20 +344,18 @@ impl<T> Graph<T> {
     /// graph.add_vertex(3);
     ///
     /// graph.retain(|v| *v != 2);
-    /// 
+    ///
     /// assert_eq!(graph.vertex_count(), 2);
     /// ```
     pub fn retain(&mut self, fun: impl Fn(&T) -> bool) {
-        let vertices: Vec<VertexId> = self.vertices().map(|v| *v).collect();
+        let vertices: Vec<VertexId> = self.vertices().cloned().collect();
         let vertices: Vec<VertexId> = vertices
             .iter()
             .filter(|v| !fun(self.fetch(v).unwrap()))
-            .map(|v| *v)
+            .cloned()
             .collect();
 
-        vertices 
-            .iter()
-            .for_each(|v| self.remove(v));
+        vertices.iter().for_each(|v| self.remove(v));
     }
 
     /// Performs a fold over the vertices that are
@@ -380,7 +372,7 @@ impl<T> Graph<T> {
     /// graph.add_vertex(3);
     ///
     /// let result = graph.fold(0, |v, acc| v + acc);
-    /// 
+    ///
     /// assert_eq!(result, 6);
     /// ```
     pub fn fold<A>(&self, initial: A, fun: impl Fn(&T, A) -> A) -> A {
@@ -394,7 +386,7 @@ impl<T> Graph<T> {
     }
 
     /// Returns true if the graph has cycles.
-    /// 
+    ///
     /// ```rust
     /// use graphlib::Graph;
     ///
@@ -404,7 +396,7 @@ impl<T> Graph<T> {
     /// let v2 = graph.add_vertex(1);
     /// let v3 = graph.add_vertex(2);
     /// let v4 = graph.add_vertex(3);
-    /// 
+    ///
     /// println!("V1: {:?}", v1);
     /// println!("V2: {:?}", v2);
     /// println!("V3: {:?}", v3);
@@ -413,11 +405,11 @@ impl<T> Graph<T> {
     /// graph.add_edge(&v1, &v2).unwrap();
     /// graph.add_edge(&v2, &v3).unwrap();
     /// graph.add_edge(&v3, &v4).unwrap();
-    /// 
+    ///
     /// assert!(!graph.is_cyclic());
-    /// 
+    ///
     /// graph.add_edge(&v3, &v1);
-    /// 
+    ///
     /// assert!(graph.is_cyclic());
     /// ```
     pub fn is_cyclic(&self) -> bool {
@@ -427,7 +419,7 @@ impl<T> Graph<T> {
 
     /// Returns the number of root vertices
     /// in the graph.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -533,7 +525,7 @@ impl<T> Graph<T> {
 
     /// Returns an iterator over the inbound neighbors
     /// of the vertex with the given id.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -554,21 +546,15 @@ impl<T> Graph<T> {
     /// for v in graph.in_neighbors(&v1) {
     ///     neighbors.push(v);
     /// }
-    /// 
+    ///
     /// assert_eq!(neighbors.len(), 1);
     /// assert_eq!(neighbors[0], &v3);
     /// ```
-    pub fn in_neighbors<'a>(&self, id: &VertexId) -> VertexIter<'_> {
-        let mut collection: Vec<&VertexId> = vec![]; 
-        
-        match self.inbound_table.get(id) {
-            Some(inbounds) => {
-                collection = inbounds
-                    .iter()
-                    .map(|v| v.as_ref())
-                    .collect();
-            },
-            None => { } // Do nothing
+    pub fn in_neighbors(&self, id: &VertexId) -> VertexIter<'_> {
+        let mut collection: Vec<&VertexId> = vec![];
+
+        if let Some(inbounds) = self.inbound_table.get(id) {
+            collection = inbounds.iter().map(|v| v.as_ref()).collect();
         };
 
         VertexIter::new(collection)
@@ -576,7 +562,7 @@ impl<T> Graph<T> {
 
     /// Returns an iterator over the outbound neighbors
     /// of the vertex with the given id.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -597,22 +583,16 @@ impl<T> Graph<T> {
     /// for v in graph.out_neighbors(&v1) {
     ///     neighbors.push(v);
     /// }
-    /// 
+    ///
     /// assert_eq!(neighbors.len(), 2);
     /// assert_eq!(neighbors[0], &v2);
     /// assert_eq!(neighbors[1], &v4);
     /// ```
-    pub fn out_neighbors<'a>(&self, id: &VertexId) -> VertexIter<'_> {
-        let mut collection: Vec<&VertexId> = vec![]; 
-        
-        match self.outbound_table.get(id) {
-            Some(outbounds) => {
-                collection = outbounds
-                    .iter()
-                    .map(|v| v.as_ref())
-                    .collect();
-            },
-            None => { } // Do nothing
+    pub fn out_neighbors(&self, id: &VertexId) -> VertexIter<'_> {
+        let mut collection: Vec<&VertexId> = vec![];
+
+        if let Some(outbounds) = self.outbound_table.get(id) {
+            collection = outbounds.iter().map(|v| v.as_ref()).collect();
         };
 
         VertexIter::new(collection)
@@ -620,7 +600,7 @@ impl<T> Graph<T> {
 
     /// Returns an iterator over the outbound neighbors
     /// of the vertex with the given id.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -641,42 +621,30 @@ impl<T> Graph<T> {
     /// for v in graph.neighbors(&v1) {
     ///     neighbors.push(v);
     /// }
-    /// 
+    ///
     /// assert_eq!(neighbors.len(), 3);
     /// assert_eq!(neighbors[0], &v2);
     /// assert_eq!(neighbors[1], &v4);
     /// assert_eq!(neighbors[2], &v3);
     /// ```
-    pub fn neighbors<'a>(&self, id: &VertexId) -> VertexIter<'_> {
-        let mut collection: Vec<&VertexId> = vec![]; 
-        
+    pub fn neighbors(&self, id: &VertexId) -> VertexIter<'_> {
+        let mut collection: Vec<&VertexId> = vec![];
+
         match (self.outbound_table.get(id), self.inbound_table.get(id)) {
             (Some(outbounds), None) => {
-                collection = outbounds
-                    .iter()
-                    .map(|v| v.as_ref())
-                    .collect();
-            },
+                collection = outbounds.iter().map(|v| v.as_ref()).collect();
+            }
             (None, Some(inbounds)) => {
-                collection = inbounds
-                    .iter()
-                    .map(|v| v.as_ref())
-                    .collect();
-            },
+                collection = inbounds.iter().map(|v| v.as_ref()).collect();
+            }
             (Some(outbounds), Some(inbounds)) => {
-                collection = outbounds
-                    .iter()
-                    .map(|v| v.as_ref())
-                    .collect();
+                collection = outbounds.iter().map(|v| v.as_ref()).collect();
 
-                let inbounds: Vec<&VertexId> = inbounds
-                    .iter()
-                    .map(|v| v.as_ref())
-                    .collect();
+                let inbounds: Vec<&VertexId> = inbounds.iter().map(|v| v.as_ref()).collect();
 
                 collection.extend_from_slice(&inbounds);
-            },
-            (None, None) => { } // Do nothing
+            }
+            (None, None) => {} // Do nothing
         };
 
         VertexIter::new(collection)
@@ -684,7 +652,7 @@ impl<T> Graph<T> {
 
     /// Returns an iterator over the root vertices
     /// of the graph.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -705,15 +673,12 @@ impl<T> Graph<T> {
     /// for v in graph.roots() {
     ///     roots.push(v);
     /// }
-    /// 
+    ///
     /// assert_eq!(roots.len(), 1);
     /// assert_eq!(roots[0], &v3);
     /// ```
-    pub fn roots<'a>(&self) -> VertexIter<'_> {
-        let collection: Vec<&VertexId> = self.roots
-            .iter()
-            .map(|v| v.as_ref())
-            .collect();
+    pub fn roots(&self) -> VertexIter<'_> {
+        let collection: Vec<&VertexId> = self.roots.iter().map(|v| v.as_ref()).collect();
 
         VertexIter::new(collection)
     }
@@ -737,21 +702,18 @@ impl<T> Graph<T> {
     /// for v in graph.vertices() {
     ///     vertices.push(v);
     /// }
-    /// 
+    ///
     /// assert_eq!(vertices.len(), 4);
     /// ```
     pub fn vertices(&self) -> VertexIter<'_> {
-        let collection: Vec<&VertexId> = self.vertices
-            .iter()
-            .map(|(v, _)| v.as_ref())
-            .collect();
+        let collection: Vec<&VertexId> = self.vertices.iter().map(|(v, _)| v.as_ref()).collect();
 
         VertexIter::new(collection)
     }
 
     /// Returns an iterator over the vertices
     /// of the graph in Depth-First Order.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -772,20 +734,20 @@ impl<T> Graph<T> {
     /// for v in graph.dfs() {
     ///     vertices.push(v);
     /// }
-    /// 
+    ///
     /// assert_eq!(vertices.len(), 4);
     /// assert_eq!(vertices[0], &v3);
     /// assert_eq!(vertices[1], &v1);
     /// assert_eq!(vertices[2], &v2);
     /// assert_eq!(vertices[3], &v4);
     /// ```
-    pub fn dfs<'a>(&self) -> Dfs<'_, T> {
+    pub fn dfs(&self) -> Dfs<'_, T> {
         Dfs::new(self)
     }
 
     /// Returns an iterator over the vertices
     /// of the graph in Breadth-First Order.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -812,7 +774,7 @@ impl<T> Graph<T> {
     /// for v in graph.bfs() {
     ///     vertices.push(v);
     /// }
-    /// 
+    ///
     /// assert_eq!(vertices.len(), 7);
     /// assert_eq!(vertices[0], &v3);
     /// assert_eq!(vertices[1], &v1);
@@ -822,17 +784,16 @@ impl<T> Graph<T> {
     /// assert_eq!(vertices[5], &v5);
     /// assert_eq!(vertices[6], &v6);
     /// ```
-    pub fn bfs<'a>(&self) -> Bfs<'_, T> {
+    pub fn bfs(&self) -> Bfs<'_, T> {
         Bfs::new(self)
     }
-
 
     /// Attempts to fetch a reference to a stored vertex id
     /// which is equal to the given `VertexId`.
     pub fn fetch_id_ref<'b>(&'b self, id: &VertexId) -> Option<&'b VertexId> {
         match self.vertices.get(id) {
             Some((_, id_ptr)) => Some(id_ptr.as_ref()),
-            None => None
+            None => None,
         }
     }
 }
@@ -845,21 +806,21 @@ mod tests {
     fn dfs() {
         let mut graph: Graph<usize> = Graph::new();
         let mut vertices = vec![];
-    
+
         let v1 = graph.add_vertex(0);
         let v2 = graph.add_vertex(1);
         let v3 = graph.add_vertex(2);
         let v4 = graph.add_vertex(3);
-    
+
         graph.add_edge(&v1, &v2).unwrap();
         graph.add_edge(&v3, &v1).unwrap();
         graph.add_edge(&v1, &v4).unwrap();
-    
+
         // Iterate over vertices
         for v in graph.dfs() {
             vertices.push(v);
         }
-     
+
         assert_eq!(vertices.len(), 4);
         assert_eq!(vertices[0], &v3);
         assert_eq!(vertices[1], &v1);
@@ -871,12 +832,12 @@ mod tests {
     fn dfs_mul_roots() {
         let mut graph: Graph<usize> = Graph::new();
         let mut vertices = vec![];
-    
+
         let v1 = graph.add_vertex(0);
         let v2 = graph.add_vertex(1);
         let v3 = graph.add_vertex(2);
         let v4 = graph.add_vertex(3);
-    
+
         let v5 = graph.add_vertex(4);
         let v6 = graph.add_vertex(5);
 
@@ -889,7 +850,7 @@ mod tests {
         for v in graph.dfs() {
             vertices.push(v);
         }
-     
+
         assert_eq!(vertices.len(), 6);
         assert_eq!(vertices[0], &v5);
         assert_eq!(vertices[1], &v6);

@@ -7,19 +7,19 @@ use std::sync::Arc;
 pub struct Edge {
     inbound: Arc<VertexId>,
     outbound: Arc<VertexId>,
-    weight: f32
+    weight: f32,
 }
 
 impl Edge {
     pub fn new(outbound: Arc<VertexId>, inbound: Arc<VertexId>) -> Edge {
         Edge {
-            inbound: inbound,
-            outbound: outbound,
+            inbound,
+            outbound,
             weight: 0.0,
         }
     }
 
-    /// Returns true if the given vertex ids are the 
+    /// Returns true if the given vertex ids are the
     /// inbound and outbound vertices of the edge.
     pub fn matches(&self, a: &VertexId, b: &VertexId) -> bool {
         a == self.outbound.as_ref() && b == self.inbound.as_ref()

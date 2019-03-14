@@ -5,14 +5,14 @@ use crate::vertex_id::VertexId;
 #[derive(Debug)]
 pub struct VertexIter<'a> {
     current: usize,
-    iterable: Vec<&'a VertexId>
+    iterable: Vec<&'a VertexId>,
 }
 
 impl<'a> VertexIter<'a> {
     pub fn new(neighbors: Vec<&'a VertexId>) -> VertexIter<'a> {
         VertexIter {
             current: 0,
-            iterable: neighbors
+            iterable: neighbors,
         }
     }
 }
@@ -23,8 +23,8 @@ impl<'a> Iterator for VertexIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.current == self.iterable.len() {
             return None;
-        } 
-        
+        }
+
         let result = self.iterable[self.current];
         self.current += 1;
 

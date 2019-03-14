@@ -1,9 +1,9 @@
 // Copyright 2019 Octavian Oncescu
 
-mod dfs;
 mod bfs;
+mod dfs;
 mod vertices;
 
-pub use vertices::*;
-pub use dfs::*;
 pub use bfs::*;
+pub use dfs::*;
+pub use vertices::*;
