@@ -12,7 +12,7 @@ pub enum GraphErr {
     CannotAddEdge
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Graph<T> {
     vertices: HashMap<Arc<VertexId>, (T, Arc<VertexId>)>,
     edges: Vec<Edge>,

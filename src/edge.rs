@@ -3,7 +3,7 @@
 use crate::vertex_id::VertexId;
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Edge {
     inbound: Arc<VertexId>,
     outbound: Arc<VertexId>,
