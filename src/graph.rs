@@ -2,7 +2,6 @@
 
 use crate::edge::Edge;
 use crate::iterators::{Bfs, Dfs, VertexIter};
-use crate::macros;
 use crate::vertex_id::VertexId;
 use hashbrown::HashMap;
 use std::sync::Arc;
@@ -68,33 +67,6 @@ impl<T> Graph<T> {
             self.roots.capacity(),
             self.inbound_table.capacity(),
             self.outbound_table.capacity()
-        )
-    }
-
-    /// return a verbose number of elements the Graph can hold without reallocating in the following order
-    ///
-    /// `(vertices, edges, roots, inbound_table, outbound_table)`
-    ///
-    /// ## Example
-    /// ```rust
-    /// use graphlib::Graph;
-    ///
-    /// let mut graph: Graph<usize> = Graph::with_capacity(5);
-    ///
-    /// let c = graph.capacity_v();
-    /// assert!(c.0 > 5); // hashbrown [implementation](https://docs.rs/hashbrown/0.1.8/hashbrown/struct.HashMap.html#method.capacity)
-    /// assert_eq!(5, c.1);
-    /// assert_eq!(5, c.2);
-    /// assert!(c.3 > 5);
-    /// assert!(c.4 > 5);
-    /// ```
-    pub fn capacity_v(&self) -> (usize, usize, usize, usize, usize) {
-        (
-            self.vertices.capacity(),
-            self.edges.capacity(),
-            self.roots.capacity(),
-            self.inbound_table.capacity(),
-            self.outbound_table.capacity(),
         )
     }
 
