@@ -32,6 +32,25 @@ impl<T> Graph<T> {
         }
     }
 
+    /// Creates a Graph with the given capacity
+    /// *note: you can push more data into the graph but it will reallocate itself*
+    ///
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// let mut graph: Graph<usize> = Graph::with_capacity(5);
+    /// ```
+    pub fn with_capacity(capacity: usize) -> Graph<T> {
+        Graph {
+            vertices: HashMap::with_capacity(capacity),
+            edges: Vec::with_capacity(capacity),
+            roots: Vec::with_capacity(capacity),
+            inbound_table: HashMap::with_capacity(capacity),
+            outbound_table: HashMap::with_capacity(capacity),
+        }
+    }
+
     /// Adds a new vertex to the graph and returns the id
     /// of the added vertex.
     ///
