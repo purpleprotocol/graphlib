@@ -124,6 +124,28 @@ impl<T> Graph<T> {
         self.inbound_table.reserve(additional);
     }
 
+    /// Shrinks the capacity of the Graph as much as possible.
+    ///
+    /// It will drop down as close as possible to the length but the allocator may still inform the
+    /// vector that there is space for a few more elements.
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    /// let mut graph: Graph<usize> = Graph::with_capacity(5);
+    ///
+    /// assert_eq!(graph.capacity(), 5);
+    ///
+    /// graph.shrink_to_fit();
+    /// assert_eq!(graph.capacity(), 0);
+    /// ```
+    pub fn shrink_to_fit(&mut self) {
+        self.edges.shrink_to_fit();
+        self.roots.shrink_to_fit();
+        self.vertices.shrink_to_fit();
+        self.outbound_table.shrink_to_fit();
+        self.inbound_table.shrink_to_fit();
+    }
+
     /// Adds a new vertex to the graph and returns the id
     /// of the added vertex.
     ///
