@@ -102,6 +102,28 @@ impl<T> Graph<T> {
         )
     }
 
+    /// Reserves capacity for at least additional more elements to be inserted in the given
+    /// `Graph`. After calling reserve, capacity will be greater than or equal to `self.len() + additional`.
+    ///
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// let mut graph: Graph<usize> = Graph::with_capacity(5);
+    ///
+    /// assert_eq!(graph.capacity(), 5);
+    ///
+    /// graph.reserve(10);
+    /// assert_eq!(graph.capacity(), 10);
+    /// ```
+    pub fn reserve(&mut self, additional: usize) {
+        self.edges.reserve(additional);
+        self.roots.reserve(additional);
+        self.vertices.reserve(additional);
+        self.outbound_table.reserve(additional);
+        self.inbound_table.reserve(additional);
+    }
+
     /// Adds a new vertex to the graph and returns the id
     /// of the added vertex.
     ///
