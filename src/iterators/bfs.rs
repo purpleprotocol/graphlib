@@ -1,7 +1,7 @@
 // Copyright 2019 Octavian Oncescu
 
-use crate::vertex_id::VertexId;
 use crate::graph::Graph;
+use crate::vertex_id::VertexId;
 
 use std::collections::VecDeque;
 use std::sync::Arc;
@@ -12,7 +12,7 @@ pub struct Bfs<'a, T> {
     current_ptr: Option<Arc<VertexId>>,
     visited_stack: Vec<Arc<VertexId>>,
     roots_stack: Vec<Arc<VertexId>>,
-    iterable: &'a Graph<T>
+    iterable: &'a Graph<T>,
 }
 
 impl<'a, T> Bfs<'a, T> {
@@ -27,10 +27,10 @@ impl<'a, T> Bfs<'a, T> {
 
         Bfs {
             queue: VecDeque::with_capacity(graph.vertex_count()),
-            current_ptr: current_ptr,
+            current_ptr,
             visited_stack: Vec::with_capacity(graph.vertex_count()),
-            roots_stack: roots_stack,
-            iterable: graph
+            roots_stack,
+            iterable: graph,
         }
     }
 }
@@ -43,7 +43,7 @@ impl<'a, T> Iterator for Bfs<'a, T> {
             let mut next_ptr = None;
 
             if let Some(current_ptr) = &self.current_ptr {
-                // Yield current pointed value if 
+                // Yield current pointed value if
                 // it isn't in the visited stack.
                 if !self.visited_stack.iter().any(|o| **o == **current_ptr) {
                     self.visited_stack.push(current_ptr.clone());
@@ -73,12 +73,12 @@ impl<'a, T> Iterator for Bfs<'a, T> {
                     // Pop item from queue and set it
                     // as the current pointer.
                     next_ptr = self.queue.pop_front();
-                } 
+                }
             } else {
                 return None;
             }
 
-            if let Some(_) = next_ptr {
+            if next_ptr.is_some() {
                 self.current_ptr = next_ptr;
             }
         }
