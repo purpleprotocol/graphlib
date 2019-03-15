@@ -2,14 +2,10 @@
 
 use crate::edge::Edge;
 use crate::iterators::{Bfs, Dfs, VertexIter};
+use crate::macros;
 use crate::vertex_id::VertexId;
 use hashbrown::HashMap;
 use std::sync::Arc;
-
-macro_rules! min {
-    ($x: expr) => ($x);
-    ($x: expr, $($z: expr),+) => (::std::cmp::min($x, min!($($z),*)));
-}
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum GraphErr {
