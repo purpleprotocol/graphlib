@@ -1,12 +1,12 @@
 // Copyright 2019 Octavian Oncescu
 
-//! # Graphlib 
-//! Graphlib is a simple and powerful rust library for the graph data-structure. 
+//! # Graphlib
+//! Graphlib is a simple and powerful rust library for the graph data-structure.
 //!
 //! ---
 //!
-//! This library attempts to provide a generic api for building, mutating and iterating over graphs that is similar to that of other data-structures in rust i.e. `Vec`, `HashMap`, `VecDeque`, etc. 
-//! 
+//! This library attempts to provide a generic api for building, mutating and iterating over graphs that is similar to that of other data-structures in rust i.e. `Vec`, `HashMap`, `VecDeque`, etc.
+//!
 //! ### Usage
 //! ```rust
 //! use graphlib::Graph;
@@ -35,6 +35,8 @@
 //! ```
 
 mod edge;
+#[macro_use]
+mod macros;
 mod graph;
 pub mod iterators;
 mod vertex_id;

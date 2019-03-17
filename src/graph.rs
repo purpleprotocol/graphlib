@@ -32,6 +32,88 @@ impl<T> Graph<T> {
         }
     }
 
+    /// Creates a Graph with the given capacity.
+    /// *note: you can push more data into the graph but it will reallocate itself*
+    ///
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// let mut graph: Graph<usize> = Graph::with_capacity(5);
+    /// ```
+    pub fn with_capacity(capacity: usize) -> Graph<T> {
+        Graph {
+            vertices: HashMap::with_capacity(capacity),
+            edges: Vec::with_capacity(usize::pow(capacity, 2)),
+            roots: Vec::with_capacity(capacity),
+            inbound_table: HashMap::with_capacity(capacity),
+            outbound_table: HashMap::with_capacity(capacity),
+        }
+    }
+
+    /// Returns the minimum number of elements the Graph can hold without reallocating.
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// let mut graph: Graph<usize> = Graph::with_capacity(5);
+    ///
+    /// assert_eq!(graph.capacity(), 5);
+    /// ```
+    pub fn capacity(&self) -> usize {
+        min!(
+            self.vertices.capacity(),
+            self.edges.capacity(),
+            self.roots.capacity(),
+            self.inbound_table.capacity(),
+            self.outbound_table.capacity()
+        )
+    }
+
+    /// Reserves capacity for at least additional more elements to be inserted in the given
+    /// `Graph`. After calling reserve, capacity will be greater than or equal to `self.len() + additional`.
+    ///
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// let mut graph: Graph<usize> = Graph::with_capacity(5);
+    ///
+    /// assert_eq!(graph.capacity(), 5);
+    ///
+    /// graph.reserve(10);
+    /// assert_eq!(graph.capacity(), 10);
+    /// ```
+    pub fn reserve(&mut self, additional: usize) {
+        self.edges.reserve(additional);
+        self.roots.reserve(additional);
+        self.vertices.reserve(additional);
+        self.outbound_table.reserve(additional);
+        self.inbound_table.reserve(additional);
+    }
+
+    /// Shrinks the capacity of the Graph as much as possible.
+    ///
+    /// It will drop down as close as possible to the length but the allocator may still inform the
+    /// vector that there is space for a few more elements.
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    /// let mut graph: Graph<usize> = Graph::with_capacity(5);
+    ///
+    /// assert_eq!(graph.capacity(), 5);
+    ///
+    /// graph.shrink_to_fit();
+    /// assert_eq!(graph.capacity(), 0);
+    /// ```
+    pub fn shrink_to_fit(&mut self) {
+        self.edges.shrink_to_fit();
+        self.roots.shrink_to_fit();
+        self.vertices.shrink_to_fit();
+        self.outbound_table.shrink_to_fit();
+        self.inbound_table.shrink_to_fit();
+    }
+
     /// Adds a new vertex to the graph and returns the id
     /// of the added vertex.
     ///
