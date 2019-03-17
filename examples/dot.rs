@@ -2,6 +2,7 @@ use graphlib::Graph;
 use graphlib::dot::render_to;
 
 pub fn main() {
+    // This example requires the `graphviz` feature.
     use std::fs::File;
     let mut f = File::create("example1.dot").unwrap();
 
