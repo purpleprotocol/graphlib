@@ -30,4 +30,14 @@ impl Edge {
     pub fn matches_any(&self, id: &VertexId) -> bool {
         id == self.inbound.as_ref() || id == self.outbound.as_ref()
     }
+
+    /// Returns the inbound VertexId
+    pub fn inbound(&self) -> &VertexId {
+        &self.inbound
+    }
+
+    /// Returns the inbound VertexId
+    pub fn outbound(&self) -> &VertexId {
+        &self.outbound
+    }
 }

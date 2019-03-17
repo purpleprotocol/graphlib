@@ -41,5 +41,7 @@ mod graph;
 pub mod iterators;
 mod vertex_id;
 
+pub mod dot;
+
 pub use graph::*;
 pub use vertex_id::*;

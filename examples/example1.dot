@@ -1,0 +1,12 @@
+digraph example1 {
+    N0[label="N0"];
+    N1[label="N1"];
+    N2[label="N2"];
+    N3[label="N3"];
+    N4[label="N4"];
+    N5[label="N5"];
+    N1 -> N0[label=""];
+    N0 -> N2[label=""];
+    N3 -> N0[label=""];
+    N5 -> N4[label=""];
+}

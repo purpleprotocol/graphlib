@@ -16,3 +16,4 @@ travis-ci = { repository = "purpleprotocol/graphlib", branch = "master" }
 [dependencies]
 rand = "0.6.0"
 hashbrown = { version = "0.1", features = ["rayon"] }
+dot = "0.1.4"
