@@ -22,6 +22,17 @@ pub struct Graph<T> {
 }
 
 impl<T> Graph<T> {
+    /// Creates a new graph.
+    ///
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    ///
+    /// graph.add_vertex(0);
+    /// assert_eq!(graph.vertex_count(), 1);
+    /// ```
     pub fn new() -> Graph<T> {
         Graph {
             vertices: HashMap::new(),
@@ -32,8 +43,7 @@ impl<T> Graph<T> {
         }
     }
 
-    /// Creates a Graph with the given capacity.
-    /// *note: you can push more data into the graph but it will reallocate itself*
+    /// Creates a new graph with the given capacity.
     ///
     /// ## Example
     /// ```rust
@@ -51,7 +61,7 @@ impl<T> Graph<T> {
         }
     }
 
-    /// Returns the minimum number of elements the Graph can hold without reallocating.
+    /// Returns the minimum number of elements the graph can hold without reallocating.
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -71,34 +81,48 @@ impl<T> Graph<T> {
     }
 
     /// Reserves capacity for at least additional more elements to be inserted in the given
-    /// `Graph`. After calling reserve, capacity will be greater than or equal to `self.len() + additional`.
+    /// graph. After calling reserve, capacity will be greater than or equal to `self.vertex_count() + additional`.
     ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
     ///
-    /// let mut graph: Graph<usize> = Graph::with_capacity(5);
+    /// let mut graph: Graph<usize> = Graph::with_capacity(3);
     ///
-    /// assert_eq!(graph.capacity(), 5);
+    /// assert_eq!(graph.capacity(), 3);
+    ///
+    /// graph.add_vertex(0);
+    /// graph.add_vertex(1);
+    /// graph.add_vertex(2);
     ///
     /// graph.reserve(10);
-    /// assert_eq!(graph.capacity(), 10);
+    /// assert!(graph.capacity() >= 13);
     /// ```
     pub fn reserve(&mut self, additional: usize) {
-        self.edges.reserve(additional);
+        // Calculate additional value for edges vector
+        // such that it is always n^2 where n is the
+        // number of vertices that are currently placed
+        // in the graph.
+        let new_capacity = self.vertices.len() + additional;
+        let edges_capacity = usize::pow(new_capacity, 2);
+        let edges_count = self.edges.len();
+        let edges_additional = edges_capacity - edges_count;
+
+        self.edges.reserve(edges_additional);
         self.roots.reserve(additional);
         self.vertices.reserve(additional);
         self.outbound_table.reserve(additional);
         self.inbound_table.reserve(additional);
     }
 
-    /// Shrinks the capacity of the Graph as much as possible.
+    /// Shrinks the capacity of the graph as much as possible.
     ///
     /// It will drop down as close as possible to the length but the allocator may still inform the
     /// vector that there is space for a few more elements.
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
+    ///
     /// let mut graph: Graph<usize> = Graph::with_capacity(5);
     ///
     /// assert_eq!(graph.capacity(), 5);
@@ -112,6 +136,16 @@ impl<T> Graph<T> {
         self.vertices.shrink_to_fit();
         self.outbound_table.shrink_to_fit();
         self.inbound_table.shrink_to_fit();
+
+        // Calculate additional value for edges vector
+        // such that it is always n^2 where n is the
+        // number of vertices that are currently placed
+        // in the graph.
+        let edges_capacity = usize::pow(self.vertices.len(), 2);
+        let edges_count = self.edges.len();
+        let edges_additional = edges_capacity - edges_count;
+
+        self.edges.reserve(edges_additional);
     }
 
     /// Adds a new vertex to the graph and returns the id
@@ -478,11 +512,6 @@ impl<T> Graph<T> {
     /// let v2 = graph.add_vertex(1);
     /// let v3 = graph.add_vertex(2);
     /// let v4 = graph.add_vertex(3);
-    ///
-    /// println!("V1: {:?}", v1);
-    /// println!("V2: {:?}", v2);
-    /// println!("V3: {:?}", v3);
-    /// println!("V4: {:?}", v4);
     ///
     /// graph.add_edge(&v1, &v2).unwrap();
     /// graph.add_edge(&v2, &v3).unwrap();
