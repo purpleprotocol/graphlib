@@ -4,13 +4,14 @@ use crate::graph::Graph;
 use crate::vertex_id::VertexId;
 
 use std::collections::VecDeque;
+use std::collections::HashSet;
 use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Bfs<'a, T> {
     queue: VecDeque<Arc<VertexId>>,
     current_ptr: Option<Arc<VertexId>>,
-    visited_stack: Vec<Arc<VertexId>>,
+    visited_stack: HashSet<Arc<VertexId>>, // instead of a Vec, let's use a HashSet. (Haven't changed the name of variable yet. Maybe try "visited_set" ?!)
     roots_stack: Vec<Arc<VertexId>>,
     iterable: &'a Graph<T>,
 }
@@ -28,7 +29,7 @@ impl<'a, T> Bfs<'a, T> {
         Bfs {
             queue: VecDeque::with_capacity(graph.vertex_count()),
             current_ptr,
-            visited_stack: Vec::with_capacity(graph.vertex_count()),
+            visited_stack: HashSet::new(),  // Initially the set is empty. As soon as any node is visited, insert it in here.
             roots_stack,
             iterable: graph,
         }
@@ -45,16 +46,16 @@ impl<'a, T> Iterator for Bfs<'a, T> {
             if let Some(current_ptr) = &self.current_ptr {
                 // Yield current pointed value if
                 // it isn't in the visited stack.
-                if !self.visited_stack.iter().any(|o| **o == **current_ptr) {
-                    self.visited_stack.push(current_ptr.clone());
+                if !self.visited_stack.contains(&current_ptr) { // if set doesn't have a node
+                    self.visited_stack.insert(current_ptr.clone()); // then insert it
                     return self.iterable.fetch_id_ref(current_ptr.as_ref());
                 }
 
                 // Iterate through current neighbors
                 // and check their visited status.
                 for n in self.iterable.out_neighbors(current_ptr.as_ref()) {
-                    if !self.visited_stack.iter().any(|o| **o == *n) {
-                        self.visited_stack.push(Arc::from(*n));
+                    if !self.visited_stack.contains(n) {  // assuming &(*n) is same as 'n'. (I'm still a noob.)
+                        self.visited_stack.insert(Arc::from(*n));
                         self.queue.push_back(Arc::from(*n));
 
                         return self.iterable.fetch_id_ref(n);
