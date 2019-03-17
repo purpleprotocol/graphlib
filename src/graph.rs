@@ -44,7 +44,7 @@ impl<T> Graph<T> {
     pub fn with_capacity(capacity: usize) -> Graph<T> {
         Graph {
             vertices: HashMap::with_capacity(capacity),
-            edges: Vec::with_capacity(capacity),
+            edges: Vec::with_capacity(usize::pow(capacity, 2)),
             roots: Vec::with_capacity(capacity),
             inbound_table: HashMap::with_capacity(capacity),
             outbound_table: HashMap::with_capacity(capacity),
