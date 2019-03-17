@@ -10,10 +10,15 @@ description = "Graphlib is a simple and powerful rust library for the graph data
 license = "MIT"
 readme = "README.md"
 
+
 [badges]
 travis-ci = { repository = "purpleprotocol/graphlib", branch = "master" }
 
 [dependencies]
 rand = "0.6.0"
 hashbrown = { version = "0.1", features = ["rayon"] }
-dot = "0.1.4"
+dot = {version = "0.1.4", optional=true}
+
+[features]
+default = []
+graphviz = ["dot"]

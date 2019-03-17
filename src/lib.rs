@@ -41,6 +41,7 @@ mod graph;
 pub mod iterators;
 mod vertex_id;
 
+#[cfg(feature="graphviz")]
 pub mod dot;
 
 pub use graph::*;
