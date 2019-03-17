@@ -10,10 +10,12 @@ description = "Graphlib is a simple and powerful rust library for the graph data
 license = "MIT"
 readme = "README.md"
 
+
 [badges]
 travis-ci = { repository = "purpleprotocol/graphlib", branch = "master" }
 
 [dependencies]
+<<<<<<< HEAD
 rand = {version ="0.6.5", default-features = false}
 rand_core = "0.4.0"
 rand_isaac = "0.1.1"
@@ -38,3 +40,5 @@ sbench = []
 # nightly feature for `no_std`
 # for build use `cargo +nightly build --features no_std`
 no_std = ["hashbrown/nightly"]
+hashbrown = { version = "0.1", features = ["rayon"] }
+dot = {version = "0.1.4", optional=true}

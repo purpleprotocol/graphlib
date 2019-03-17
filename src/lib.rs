@@ -46,6 +46,10 @@ mod vertex_id;
 
 // use global variables to create VertexId::random()
 use core::sync::atomic::AtomicUsize;
+
+#[cfg(feature="graphviz")]
+pub mod dot;
+
 pub use graph::*;
 pub use vertex_id::*;
 

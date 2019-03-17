@@ -189,6 +189,31 @@ impl<T> Graph<T> {
         id
     }
 
+    /// Returns all inserted edges.
+    ///
+    /// ## Example
+    /// ```rust
+    /// use graphlib::{Graph, GraphErr, VertexId};
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    ///
+    /// // Id of vertex that is not place in the graph
+    /// let id = VertexId::random();
+    ///
+    /// let v1 = graph.add_vertex(1);
+    /// let v2 = graph.add_vertex(2);
+    ///
+    /// // Adding an edge is idempotent
+    /// graph.add_edge(&v1, &v2);
+    /// graph.add_edge(&v1, &v2);
+    /// graph.add_edge(&v1, &v2);
+    ///
+    /// assert_eq!(graph.edges().len(), 3);
+    /// ```
+    pub fn edges(&self) -> Result<(&Vec<Edge>), GraphErr> {
+        Ok(&self.edges)
+    }
+
     /// Attempts to place a new edge in the graph.
     ///
     /// ## Example
@@ -819,6 +844,27 @@ impl<T> Graph<T> {
     /// ```
     pub fn vertices(&self) -> VertexIter<'_> {
         VertexIter(Box::new(self.vertices.keys().map(AsRef::as_ref)))
+    }
+
+    /// Returns the vertices hashmap 
+    ///
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    /// let mut vertices = vec![];
+    ///
+    /// let v1 = graph.add_vertex(0);
+    /// let v2 = graph.add_vertex(1);
+    /// let v3 = graph.add_vertex(2);
+    /// let v4 = graph.add_vertex(3);
+    ///
+    /// let hashmap = graph.hashmap_vertices();
+    /// assert_eq!(vertices.keys().len(), 4);
+    /// ```
+    pub fn hashmap_vertices(&self) -> &HashMap<Arc<VertexId>, (T, Arc<VertexId>)> {
+        &self.vertices
     }
 
     /// Returns an iterator over the vertices
