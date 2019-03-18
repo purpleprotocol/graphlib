@@ -2,6 +2,7 @@
 extern crate criterion;
 
 use criterion::Criterion;
+
 use graphlib::*;
 
 // use `cargo bench --features sbench` for benching with GraphCapacity of 10_000_000

@@ -15,7 +15,6 @@ readme = "README.md"
 travis-ci = { repository = "purpleprotocol/graphlib", branch = "master" }
 
 [dependencies]
-<<<<<<< HEAD
 rand = {version ="0.6.5", default-features = false}
 rand_core = "0.4.0"
 rand_isaac = "0.1.1"
