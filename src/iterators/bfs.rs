@@ -29,7 +29,7 @@ impl<'a, T> Bfs<'a, T> {
         Bfs {
             queue: VecDeque::with_capacity(graph.vertex_count()),
             current_ptr,
-            visited_set: HashSet::new(),
+            visited_set: HashSet::with_capacity(graph.vertex_count()),
             roots_stack,
             iterable: graph,
         }
