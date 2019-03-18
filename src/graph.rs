@@ -208,7 +208,7 @@ impl<T> Graph<T> {
     /// graph.add_edge(&v1, &v2);
     /// graph.add_edge(&v1, &v2);
     ///
-    /// assert_eq!(graph.edges().len(), 3);
+    /// assert_eq!(graph.edges().unwrap().len(), 1);
     /// ```
     pub fn edges(&self) -> Result<(&Vec<Edge>), GraphErr> {
         Ok(&self.edges)
@@ -853,7 +853,6 @@ impl<T> Graph<T> {
     /// use graphlib::Graph;
     ///
     /// let mut graph: Graph<usize> = Graph::new();
-    /// let mut vertices = vec![];
     ///
     /// let v1 = graph.add_vertex(0);
     /// let v2 = graph.add_vertex(1);
@@ -861,7 +860,7 @@ impl<T> Graph<T> {
     /// let v4 = graph.add_vertex(3);
     ///
     /// let hashmap = graph.hashmap_vertices();
-    /// assert_eq!(vertices.keys().len(), 4);
+    /// assert_eq!(hashmap.keys().len(), 4);
     /// ```
     pub fn hashmap_vertices(&self) -> &HashMap<Arc<VertexId>, (T, Arc<VertexId>)> {
         &self.vertices
