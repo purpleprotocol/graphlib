@@ -11,6 +11,12 @@ matrix:
     - rust: nightly
   fast_finish: true
 
+git:
+  depth: 10
+
 script:
   - cargo build --verbose --all
   - cargo test --verbose --all
+
+after_success:
+  - ./benches-compare.sh
