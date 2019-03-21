@@ -3,8 +3,8 @@
 use crate::graph::Graph;
 use crate::vertex_id::VertexId;
 
+use hashbrown::HashSet;
 use std::collections::VecDeque;
-use std::collections::HashSet;
 use std::sync::Arc;
 
 #[derive(Debug)]
