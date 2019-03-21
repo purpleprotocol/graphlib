@@ -3,6 +3,7 @@
 use rand::Rng;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+/// Id of a vertex
 pub struct VertexId([u8; 16]); // 128bit
 
 impl VertexId {

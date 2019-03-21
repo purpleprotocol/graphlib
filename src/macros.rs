@@ -1,4 +1,4 @@
-/// macro to find minimum of a number
+/// Find the minimum of a set of numbers
 #[macro_export]
 macro_rules! min {
     ($x: expr) => ($x);
