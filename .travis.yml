@@ -27,6 +27,5 @@ script:
       cargo +nightly test --features "no_std dot" --verbose --all;
     fi
 
-
 after_script:
   - ./benches-compare.sh
