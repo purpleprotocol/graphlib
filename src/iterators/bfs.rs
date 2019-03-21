@@ -8,6 +8,7 @@ use std::collections::VecDeque;
 use std::sync::Arc;
 
 #[derive(Debug)]
+/// Breadth-First Iterator
 pub struct Bfs<'a, T> {
     queue: VecDeque<Arc<VertexId>>,
     current_ptr: Option<Arc<VertexId>>,

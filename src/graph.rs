@@ -7,12 +7,14 @@ use hashbrown::{HashMap, HashSet};
 use std::sync::Arc;
 
 #[derive(Clone, Debug, PartialEq)]
+/// Graph operation error
 pub enum GraphErr {
     NoSuchVertex,
     CannotAddEdge,
 }
 
 #[derive(Clone, Debug)]
+/// Graph data-structure
 pub struct Graph<T> {
     vertices: HashMap<Arc<VertexId>, (T, Arc<VertexId>)>,
     edges: HashSet<Edge>,

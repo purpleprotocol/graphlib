@@ -6,6 +6,7 @@ use std::hash::Hasher;
 use std::hash::Hash;
 
 #[derive(Clone, Debug)]
+/// Edge internal struct
 pub struct Edge {
     inbound: Arc<VertexId>,
     outbound: Arc<VertexId>,

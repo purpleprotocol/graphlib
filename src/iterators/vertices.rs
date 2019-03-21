@@ -3,6 +3,7 @@
 use crate::vertex_id::VertexId;
 
 #[derive(Debug)]
+/// Generic Vertex Iterator
 pub struct VertexIter<'a> {
     current: usize,
     iterable: Vec<&'a VertexId>,

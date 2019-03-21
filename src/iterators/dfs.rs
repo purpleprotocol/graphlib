@@ -7,6 +7,7 @@ use hashbrown::HashMap;
 use std::sync::Arc;
 
 #[derive(Debug)]
+/// Depth-First Iterator
 pub struct Dfs<'a, T> {
     recursion_stack: Vec<Arc<VertexId>>,
     color_map: HashMap<Arc<VertexId>, Color>,
