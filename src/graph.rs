@@ -3,7 +3,7 @@
 use crate::edge::Edge;
 use crate::iterators::{Bfs, Dfs, VertexIter};
 use crate::vertex_id::VertexId;
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 use std::sync::Arc;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -15,7 +15,7 @@ pub enum GraphErr {
 #[derive(Clone, Debug)]
 pub struct Graph<T> {
     vertices: HashMap<Arc<VertexId>, (T, Arc<VertexId>)>,
-    edges: Vec<Edge>,
+    edges: HashSet<Edge>,
     roots: Vec<Arc<VertexId>>,
     inbound_table: HashMap<Arc<VertexId>, Vec<Arc<VertexId>>>,
     outbound_table: HashMap<Arc<VertexId>, Vec<Arc<VertexId>>>,
@@ -36,7 +36,7 @@ impl<T> Graph<T> {
     pub fn new() -> Graph<T> {
         Graph {
             vertices: HashMap::new(),
-            edges: Vec::new(),
+            edges: HashSet::new(),
             roots: Vec::new(),
             inbound_table: HashMap::new(),
             outbound_table: HashMap::new(),
@@ -54,7 +54,7 @@ impl<T> Graph<T> {
     pub fn with_capacity(capacity: usize) -> Graph<T> {
         Graph {
             vertices: HashMap::with_capacity(capacity),
-            edges: Vec::with_capacity(usize::pow(capacity, 2)),
+            edges: HashSet::with_capacity(usize::pow(capacity, 2)),
             roots: Vec::with_capacity(capacity),
             inbound_table: HashMap::with_capacity(capacity),
             outbound_table: HashMap::with_capacity(capacity),
@@ -207,7 +207,7 @@ impl<T> Graph<T> {
                 let edge = Edge::new(id_ptr1.clone(), id_ptr2.clone());
 
                 // Push edge
-                self.edges.push(edge);
+                self.edges.insert(edge);
 
                 // Update outbound table
                 match self.outbound_table.get(id_ptr1) {
@@ -265,8 +265,10 @@ impl<T> Graph<T> {
     /// assert!(!graph.has_edge(&v2, &v3));
     /// ```
     pub fn has_edge(&self, a: &VertexId, b: &VertexId) -> bool {
+        let rc_other = Arc::from(*b);
+
         match self.outbound_table.get(a) {
-            Some(outbounds) => outbounds.iter().any(|v| *b == **v),
+            Some(outbounds) => outbounds.contains(&rc_other),
             None => false,
         }
     }

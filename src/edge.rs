@@ -2,12 +2,29 @@
 
 use crate::vertex_id::VertexId;
 use std::sync::Arc;
+use std::hash::Hasher;
+use std::hash::Hash;
 
 #[derive(Clone, Debug)]
 pub struct Edge {
     inbound: Arc<VertexId>,
     outbound: Arc<VertexId>,
     weight: f32,
+}
+
+impl PartialEq for Edge {
+    fn eq(&self, other: &Edge) -> bool {
+        self.inbound == other.inbound && self.outbound == other.outbound
+    }
+}
+
+impl Eq for Edge {}
+
+impl Hash for Edge {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.inbound.hash(state);
+        self.outbound.hash(state);
+    }
 }
 
 impl Edge {
