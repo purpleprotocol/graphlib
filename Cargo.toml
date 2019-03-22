@@ -23,3 +23,8 @@ criterion = "0.2.10"
 [[bench]]
 name = "benchmark"
 harness = false
+
+[features]
+
+default = []
+sbench = []
