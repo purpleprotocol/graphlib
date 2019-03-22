@@ -1,7 +1,7 @@
 use graphlib::Graph;
 
 pub fn main() {
-    // This example requires the `graphviz` feature.
+    // This example requires the `dot` feature.
     use std::fs::File;
     let mut f = File::create("example1.dot").unwrap();
 
@@ -20,5 +20,5 @@ pub fn main() {
     graph.add_edge(&v1, &v4).unwrap();
     graph.add_edge(&v5, &v6).unwrap();
 
-    Graph::render_to(&graph, &mut f);
+    Graph::<String>::to_dot(&graph, &mut f);
 }

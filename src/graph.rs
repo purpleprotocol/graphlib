@@ -190,27 +190,7 @@ impl<T> Graph<T> {
     }
 
     /// Returns all inserted edges.
-    ///
-    /// ## Example
-    /// ```rust
-    /// use graphlib::{Graph, GraphErr, VertexId};
-    ///
-    /// let mut graph: Graph<usize> = Graph::new();
-    ///
-    /// // Id of vertex that is not place in the graph
-    /// let id = VertexId::random();
-    ///
-    /// let v1 = graph.add_vertex(1);
-    /// let v2 = graph.add_vertex(2);
-    ///
-    /// // Adding an edge is idempotent
-    /// graph.add_edge(&v1, &v2);
-    /// graph.add_edge(&v1, &v2);
-    /// graph.add_edge(&v1, &v2);
-    ///
-    /// assert_eq!(graph.edges().unwrap().len(), 1);
-    /// ```
-    pub fn edges(&self) -> Result<(&Vec<Edge>), GraphErr> {
+    fn edges(&self) -> Result<(&HashSet<Edge>), GraphErr> {
         Ok(&self.edges)
     }
 
@@ -846,24 +826,9 @@ impl<T> Graph<T> {
         VertexIter(Box::new(self.vertices.keys().map(AsRef::as_ref)))
     }
 
-    /// Returns the vertices hashmap 
-    ///
-    /// ## Example
-    /// ```rust
-    /// use graphlib::Graph;
-    ///
-    /// let mut graph: Graph<usize> = Graph::new();
-    ///
-    /// let v1 = graph.add_vertex(0);
-    /// let v2 = graph.add_vertex(1);
-    /// let v3 = graph.add_vertex(2);
-    /// let v4 = graph.add_vertex(3);
-    ///
-    /// let hashmap = graph.hashmap_vertices();
-    /// assert_eq!(hashmap.keys().len(), 4);
-    /// ```
-    pub fn hashmap_vertices(&self) -> &HashMap<Arc<VertexId>, (T, Arc<VertexId>)> {
-        &self.vertices
+    /// Returns the vertices hashmap
+    fn hashmap_vertices(&self) -> &HashMap<Arc<VertexId>, (T, Arc<VertexId>)> {
+            &self.vertices
     }
 
     /// Returns an iterator over the vertices
@@ -947,6 +912,46 @@ impl<T> Graph<T> {
             Some((_, id_ptr)) => Some(id_ptr.as_ref()),
             None => None,
         }
+    }
+
+    /// Creates a file with the dot representation of the graph.
+    /// This method requires the `dot` feature.
+    ///
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// use std::fs::File;
+    /// let mut f = File::create("example1.dot").unwrap();
+    ///
+    /// let mut graph: Graph<String> = Graph::new();
+    ///
+    ///  let v1 = graph.add_vertex("test1".to_string());
+    ///  let v2 = graph.add_vertex("test2".to_string());
+    ///  let v3 = graph.add_vertex("test3".to_string());
+    ///  let v4 = graph.add_vertex("test4".to_string());
+    ///
+    ///  let v5 = graph.add_vertex("test5".to_string());
+    ///  let v6 = graph.add_vertex("test6".to_string());
+    ///
+    ///  graph.add_edge(&v1, &v2).unwrap();
+    ///  graph.add_edge(&v3, &v1).unwrap();
+    ///  graph.add_edge(&v1, &v4).unwrap();
+    ///  graph.add_edge(&v5, &v6).unwrap();
+    ///
+    ///  Graph::<String>::to_dot(&graph, &mut f);
+    /// ```
+    #[cfg(feature = "dot")]
+    pub fn to_dot(graph: &Graph<impl ::std::fmt::Display + Clone + Ord>, output: &mut impl ::std::io::Write) {
+        let vertices = graph.hashmap_vertices();
+        let edges : Vec<(_, _)> = graph.edges().unwrap().iter().map(|w| {
+            let inbound = w.inbound();
+            let outbound = w.outbound();
+
+            (vertices.get(inbound).unwrap().0.clone(), vertices.get(outbound).unwrap().0.clone())
+        }).collect();
+
+        dot::render(&crate::dot::Edges(edges), output).unwrap()
     }
 }
 

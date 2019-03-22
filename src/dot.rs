@@ -12,7 +12,7 @@ use std::fmt::Display;
 type Nd<D> = D;
 type Ed<D> = (D, D);
 
-struct Edges<D: Display + Clone>(Vec<Ed<D>>);
+pub(crate) struct Edges<D: Display + Clone>(pub(crate) Vec<Ed<D>>);
 
 impl<'a, D: Display + Clone + Ord> dot::Labeller<'a, Nd<D>, Ed<D>> for Edges<D> {
     //TODO make it possible to rename Id
