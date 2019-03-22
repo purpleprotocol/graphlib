@@ -1,9 +1,9 @@
 // Copyright 2019 Octavian Oncescu
 
 use crate::vertex_id::VertexId;
-use std::sync::Arc;
-use std::hash::Hasher;
 use std::hash::Hash;
+use std::hash::Hasher;
+use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 /// Edge internal struct

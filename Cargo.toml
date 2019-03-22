@@ -16,3 +16,15 @@ travis-ci = { repository = "purpleprotocol/graphlib", branch = "master" }
 [dependencies]
 rand = "0.6.0"
 hashbrown = { version = "0.1", features = ["rayon"] }
+
+[dev-dependencies]
+criterion = "0.2.10"
+
+[[bench]]
+name = "benchmark"
+harness = false
+
+[features]
+
+default = []
+sbench = []
