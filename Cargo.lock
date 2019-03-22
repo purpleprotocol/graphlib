@@ -155,7 +155,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "graphlib"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "criterion 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "hashbrown 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",

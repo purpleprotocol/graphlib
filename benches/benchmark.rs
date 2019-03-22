@@ -9,8 +9,711 @@ use graphlib::*;
 // 2. with_capacity(capacity: usize) -> Graph<T>
 fn bench_create(c: &mut Criterion) {
     c.bench_function("new", |b| b.iter(|| Graph::<usize>::new()));
-    c.bench_function("with_capacity", |b| {
-        b.iter(|| Graph::<usize>::with_capacity(7))
+    c.bench_function("with_capacity 1", |b| {
+        b.iter(|| Graph::<usize>::with_capacity(10))
+    });
+    c.bench_function("with_capacity 2", |b| {
+        b.iter(|| Graph::<usize>::with_capacity(100))
+    });
+    c.bench_function("with_capacity 3", |b| {
+        b.iter(|| Graph::<usize>::with_capacity(500))
+    });
+    c.bench_function("with_capacity 4", |b| {
+        b.iter(|| Graph::<usize>::with_capacity(1000))
+    });
+}
+
+// includes benches for :
+// 1. dfs(&self) -> Dfs<T>
+// 2. bfs(&self) -> Bfs<T>
+// 3. vertices(&self) -> VertexIter
+// 4. roots(&self) -> VertexIter
+fn bench_iterators(c: &mut Criterion) {
+    c.bench_function("dfs 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            for v in graph.dfs() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("dfs 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.dfs() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("dfs 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.dfs() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("dfs 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.dfs() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("bfs 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.bfs() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("bfs 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.bfs() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("bfs 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.bfs() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("bfs 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.bfs() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("vertices 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        for i in 1..=10 {
+            graph.add_vertex(i);
+        }
+
+        b.iter(|| {
+            for v in graph.vertices() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("vertices 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        for i in 1..=100 {
+            graph.add_vertex(i);
+        }
+
+        b.iter(|| {
+            for v in graph.vertices() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("vertices 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        for i in 1..=500 {
+            graph.add_vertex(i);
+        }
+
+        b.iter(|| {
+            for v in graph.vertices() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("vertices 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        for i in 1..=1000 {
+            graph.add_vertex(i);
+        }
+
+        b.iter(|| {
+            for v in graph.vertices() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("roots 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut roots = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.roots() {
+                roots.push(v);
+            }
+        })
+    });
+
+    c.bench_function("roots 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut roots = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.roots() {
+                roots.push(v);
+            }
+        })
+    });
+
+    c.bench_function("roots 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut roots = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.roots() {
+                roots.push(v);
+            }
+        })
+    });
+
+    c.bench_function("roots 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut roots = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.roots() {
+                roots.push(v);
+            }
+        })
+    });
+}
+
+// includes benches for :
+// 1. in_neighbors(&self, id: &VertexId) -> VertexIter
+// 2. in_neighbors_count(&self, id: &VertexId) -> usize
+// 3. neighbors(&self, id: &VertexId) -> VertexIter
+// 4. neighbors_count(&self, id: &VertexId) -> usize
+// 5. out_neighbors(&self, id: &VertexId) -> VertexIter
+// 6. out_neighbors_count(&self, id: &VertexId) -> usize
+fn bench_neighbor_functions(c: &mut Criterion) {
+    c.bench_function("neighbors_count 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            let _k = graph.neighbors_count(&v1);
+        })
+    });
+
+    c.bench_function("neighbors_count 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            let _k = graph.neighbors_count(&v1);
+        })
+    });
+
+    c.bench_function("neighbors_count 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            let _k = graph.neighbors_count(&v1);
+        })
+    });
+
+    c.bench_function("neighbors_count 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            let _k = graph.neighbors_count(&v1);
+        })
+    });
+
+    c.bench_function("in_neighbors_count 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.in_neighbors_count(&v1);
+        })
+    });
+
+    c.bench_function("in_neighbors_count 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.in_neighbors_count(&v1);
+        })
+    });
+
+    c.bench_function("in_neighbors_count 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.in_neighbors_count(&v1);
+        })
+    });
+
+    c.bench_function("in_neighbors_count 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.in_neighbors_count(&v1);
+        })
+    });
+
+    c.bench_function("out_neighbors_count 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.out_neighbors_count(&v1);
+        })
+    });
+    c.bench_function("out_neighbors_count 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.out_neighbors_count(&v1);
+        })
+    });
+    c.bench_function("out_neighbors_count 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.out_neighbors_count(&v1);
+        })
+    });
+    c.bench_function("out_neighbors_count 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.out_neighbors_count(&v1);
+        })
+    });
+    c.bench_function("in_neighbors 1", |b| {
+        let mut neighbors = vec![];
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            for v in graph.in_neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
+    });
+    c.bench_function("in_neighbors 2", |b| {
+        let mut neighbors = vec![];
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            for v in graph.in_neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
+    });
+    c.bench_function("in_neighbors 3", |b| {
+        let mut neighbors = vec![];
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            for v in graph.in_neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
+    });
+    c.bench_function("in_neighbors 4", |b| {
+        let mut neighbors = vec![];
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            for v in graph.in_neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
+    });
+    c.bench_function("out_neighbors 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut neighbors = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            for v in graph.out_neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
+    });
+
+    c.bench_function("out_neighbors 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut neighbors = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            for v in graph.out_neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
+    });
+    c.bench_function("out_neighbors 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut neighbors = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            for v in graph.out_neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
+    });
+    c.bench_function("out_neighbors 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut neighbors = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            for v in graph.out_neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
+    });
+    c.bench_function("neighbors 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut neighbors = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
+    });
+    c.bench_function("neighbors 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut neighbors = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
+    });
+
+    c.bench_function("neighbors 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut neighbors = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
+    });
+    c.bench_function("neighbors 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut neighbors = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.neighbors(&v1) {
+                neighbors.push(v);
+            }
+        })
     });
 }
 
@@ -32,72 +735,311 @@ fn bench_create(c: &mut Criterion) {
 // 15.shrink_to_fit(&mut self)
 // 16.vertex_count(&self) -> usize
 fn bench_others(c: &mut Criterion) {
-    c.bench_function("add_edge", |b| {
+    c.bench_function("add_edge 1", |b| {
         let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            let mut v1 = graph.add_vertex(0);
 
-        let v1 = graph.add_vertex(1);
-        let v2 = graph.add_vertex(2);
-        b.iter(|| {
-            graph.add_edge(&v1, &v2);
-        })
-    });
-    c.bench_function("add_vertex", |b| {
-        let mut graph: Graph<usize> = Graph::new();
-        b.iter(|| {
-            let _id = graph.add_vertex(1);
+            for i in 1..=10 {
+                let v2 = graph.add_vertex(i);
+                graph.add_edge(&v1, &v2);
+                v1 = v2.clone();
+            }
         })
     });
 
-    c.bench_function("capacity", |b| {
+    c.bench_function("add_edge 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
         b.iter(|| {
-            let graph: Graph<usize> = Graph::with_capacity(5);
+            let mut v1 = graph.add_vertex(0);
+
+            for i in 1..=100 {
+                let v2 = graph.add_vertex(i);
+                graph.add_edge(&v1, &v2);
+                v1 = v2.clone();
+            }
+        })
+    });
+    c.bench_function("add_edge 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            let mut v1 = graph.add_vertex(0);
+
+            for i in 1..=500 {
+                let v2 = graph.add_vertex(i);
+                graph.add_edge(&v1, &v2);
+                v1 = v2.clone();
+            }
+        })
+    });
+    c.bench_function("add_edge 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            let mut v1 = graph.add_vertex(0);
+
+            for i in 1..=1000 {
+                let v2 = graph.add_vertex(i);
+                graph.add_edge(&v1, &v2);
+                v1 = v2.clone();
+            }
+        })
+    });
+    c.bench_function("add_vertex 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            for i in 1..=10 {
+                graph.add_vertex(i);
+            }
+        })
+    });
+
+    c.bench_function("add_vertex 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            for i in 1..=100 {
+                graph.add_vertex(i);
+            }
+        })
+    });
+
+    c.bench_function("add_vertex 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            for i in 1..=500 {
+                graph.add_vertex(i);
+            }
+        })
+    });
+    c.bench_function("add_vertex 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            for i in 1..=1000 {
+                graph.add_vertex(i);
+            }
+        })
+    });
+
+    c.bench_function("capacity 1", |b| {
+        let graph: Graph<usize> = Graph::with_capacity(10);
+        b.iter(|| {
+            let _k = graph.capacity();
+        })
+    });
+    c.bench_function("capacity 2", |b| {
+        let graph: Graph<usize> = Graph::with_capacity(100);
+        b.iter(|| {
+            let _k = graph.capacity();
+        })
+    });
+    c.bench_function("capacity 3", |b| {
+        let graph: Graph<usize> = Graph::with_capacity(500);
+        b.iter(|| {
             let _k = graph.capacity();
         })
     });
 
-    c.bench_function("edge_count", |b| {
-        let mut graph: Graph<usize> = Graph::new();
+    c.bench_function("capacity 4", |b| {
+        let graph: Graph<usize> = Graph::with_capacity(1000);
         b.iter(|| {
-            let v1 = graph.add_vertex(0);
-            let v2 = graph.add_vertex(1);
-            let v3 = graph.add_vertex(2);
-            let v4 = graph.add_vertex(3);
+            let _k = graph.capacity();
+        })
+    });
 
-            graph.add_edge(&v1, &v2).unwrap();
-            graph.add_edge(&v2, &v3).unwrap();
-            graph.add_edge(&v3, &v4).unwrap();
+    c.bench_function("edge_count 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
             let _k = graph.edge_count();
         })
     });
-    c.bench_function("fetch", |b| {
+    c.bench_function("edge_count 2", |b| {
         let mut graph: Graph<usize> = Graph::new();
-        let id = graph.add_vertex(1);
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.edge_count();
+        })
+    });
+
+    c.bench_function("edge_count 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.edge_count();
+        })
+    });
+    c.bench_function("edge_count 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.edge_count();
+        })
+    });
+    c.bench_function("fetch 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        for i in 1..10 {
+            graph.add_vertex(i);
+        }
+        let mut id = graph.add_vertex(10);
         b.iter(|| {
             let _k = *graph.fetch(&id).unwrap();
         })
     });
-    c.bench_function("fetch_mut", |b| {
+    c.bench_function("fetch 2", |b| {
         let mut graph: Graph<usize> = Graph::new();
-        let id = graph.add_vertex(1);
+
+        for i in 1..100 {
+            graph.add_vertex(i);
+        }
+        let mut id = graph.add_vertex(100);
+        b.iter(|| {
+            let _k = *graph.fetch(&id).unwrap();
+        })
+    });
+    c.bench_function("fetch 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        for i in 1..500 {
+            graph.add_vertex(i);
+        }
+        let mut id = graph.add_vertex(500);
+        b.iter(|| {
+            let _k = *graph.fetch(&id).unwrap();
+        })
+    });
+    c.bench_function("fetch 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        for i in 1..1000 {
+            graph.add_vertex(i);
+        }
+        let mut id = graph.add_vertex(1000);
+        b.iter(|| {
+            let _k = *graph.fetch(&id).unwrap();
+        })
+    });
+
+    c.bench_function("fetch_mut 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        for i in 1..10 {
+            graph.add_vertex(i);
+        }
+        let mut id = graph.add_vertex(10);
         b.iter(|| {
             let _v = graph.fetch_mut(&id).unwrap();
         })
     });
-    c.bench_function("fold", |b| {
+    c.bench_function("fetch_mut 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        for i in 1..100 {
+            graph.add_vertex(i);
+        }
+        let mut id = graph.add_vertex(100);
+        b.iter(|| {
+            let _v = graph.fetch_mut(&id).unwrap();
+        })
+    });
+    c.bench_function("fetch_mut 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        for i in 1..500 {
+            graph.add_vertex(i);
+        }
+        let mut id = graph.add_vertex(500);
+        b.iter(|| {
+            let _v = graph.fetch_mut(&id).unwrap();
+        })
+    });
+    c.bench_function("fetch_mut 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        for i in 1..1000 {
+            graph.add_vertex(i);
+        }
+        let mut id = graph.add_vertex(1000);
+        b.iter(|| {
+            let _v = graph.fetch_mut(&id).unwrap();
+        })
+    });
+    c.bench_function("fold 1", |b| {
         let mut graph: Graph<usize> = Graph::new();
 
-        graph.add_vertex(1);
-        graph.add_vertex(2);
-        graph.add_vertex(3);
+        for i in 1..=10 {
+            graph.add_vertex(i);
+        }
+
         b.iter(|| {
             let _result = graph.fold(0, |v, acc| v + acc);
         })
     });
-    c.bench_function("has_edge", |b| {
+    c.bench_function("fold 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        for i in 1..=100 {
+            graph.add_vertex(i);
+        }
+
+        b.iter(|| {
+            let _result = graph.fold(0, |v, acc| v + acc);
+        })
+    });
+    c.bench_function("fold 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        for i in 1..=500 {
+            graph.add_vertex(i);
+        }
+
+        b.iter(|| {
+            let _result = graph.fold(0, |v, acc| v + acc);
+        })
+    });
+    c.bench_function("fold 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        for i in 1..=1000 {
+            graph.add_vertex(i);
+        }
+
+        b.iter(|| {
+            let _result = graph.fold(0, |v, acc| v + acc);
+        })
+    });
+    c.bench_function("has_edge 1", |b| {
         let mut graph: Graph<usize> = Graph::new();
 
         let v1 = graph.add_vertex(1);
         let v2 = graph.add_vertex(2);
+
+        for i in 3..=10 {
+            graph.add_vertex(i);
+        }
         let v3 = graph.add_vertex(3);
 
         graph.add_edge(&v1, &v2).unwrap();
@@ -106,301 +1048,426 @@ fn bench_others(c: &mut Criterion) {
             let _l = graph.has_edge(&v2, &v3);
         })
     });
-    c.bench_function("is_cyclic", |b| {
-        let mut graph: Graph<usize> = Graph::new();
-
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
-
-        graph.add_edge(&v1, &v2).unwrap();
-        graph.add_edge(&v2, &v3).unwrap();
-        graph.add_edge(&v3, &v4).unwrap();
-
-        graph.add_edge(&v3, &v1);
-        b.iter(|| {
-            let _k = graph.is_cyclic();
-        })
-    });
-    c.bench_function("remove", |b| {
+    c.bench_function("has_edge 2", |b| {
         let mut graph: Graph<usize> = Graph::new();
 
         let v1 = graph.add_vertex(1);
         let v2 = graph.add_vertex(2);
-        let v3 = graph.add_vertex(3);
-        b.iter(|| {
-            graph.remove(&v2);
-            graph.remove(&v1);
-            graph.remove(&v3);
-        })
-    });
-    c.bench_function("remove_edge", |b| {
-        let mut graph: Graph<usize> = Graph::new();
 
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
+        for i in 3..=100 {
+            graph.add_vertex(i);
+        }
+        let v3 = graph.add_vertex(3);
 
         graph.add_edge(&v1, &v2).unwrap();
-        graph.add_edge(&v2, &v3).unwrap();
-        graph.add_edge(&v3, &v4).unwrap();
         b.iter(|| {
-            graph.remove_edge(&v2, &v3);
-            graph.remove_edge(&v2, &v3);
-            graph.remove_edge(&v2, &v3);
+            let _k = graph.has_edge(&v1, &v2);
+            let _l = graph.has_edge(&v2, &v3);
         })
     });
-    c.bench_function("reserve", |b| {
-        let mut graph: Graph<usize> = Graph::with_capacity(3);
 
-        graph.add_vertex(0);
-        graph.add_vertex(1);
-        graph.add_vertex(2);
+    c.bench_function("has_edge 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+
+        for i in 3..=500 {
+            graph.add_vertex(i);
+        }
+        let v3 = graph.add_vertex(3);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        b.iter(|| {
+            let _k = graph.has_edge(&v1, &v2);
+            let _l = graph.has_edge(&v2, &v3);
+        })
+    });
+
+    c.bench_function("has_edge 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+
+        for i in 3..=1000 {
+            graph.add_vertex(i);
+        }
+        let v3 = graph.add_vertex(3);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        b.iter(|| {
+            let _k = graph.has_edge(&v1, &v2);
+            let _l = graph.has_edge(&v2, &v3);
+        })
+    });
+
+    c.bench_function("is_cyclic 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let v0 = graph.add_vertex(0);
+        let mut v1 = graph.add_vertex(1);
+        let mut v2 = graph.add_vertex(2);
+        graph.add_edge(&v0, &v1);
+        graph.add_edge(&v1, &v2);
+        for i in 4..=10 {
+            v1 = v2.clone();
+            v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+        }
+        graph.add_edge(&v2, &v0);
+        b.iter(|| {
+            let _k = graph.is_cyclic();
+        })
+    });
+    c.bench_function("is_cyclic 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let v0 = graph.add_vertex(0);
+        let mut v1 = graph.add_vertex(1);
+        let mut v2 = graph.add_vertex(2);
+        graph.add_edge(&v0, &v1);
+        graph.add_edge(&v1, &v2);
+        for i in 4..=100 {
+            v1 = v2.clone();
+            v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+        }
+        graph.add_edge(&v2, &v0);
+        b.iter(|| {
+            let _k = graph.is_cyclic();
+        })
+    });
+    c.bench_function("is_cyclic 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let v0 = graph.add_vertex(0);
+        let mut v1 = graph.add_vertex(1);
+        let mut v2 = graph.add_vertex(2);
+        graph.add_edge(&v0, &v1);
+        graph.add_edge(&v1, &v2);
+        for i in 4..=500 {
+            v1 = v2.clone();
+            v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+        }
+        graph.add_edge(&v2, &v0);
+        b.iter(|| {
+            let _k = graph.is_cyclic();
+        })
+    });
+    c.bench_function("is_cyclic 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let v0 = graph.add_vertex(0);
+        let mut v1 = graph.add_vertex(1);
+        let mut v2 = graph.add_vertex(2);
+        graph.add_edge(&v0, &v1);
+        graph.add_edge(&v1, &v2);
+        for i in 4..=1000 {
+            v1 = v2.clone();
+            v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+        }
+        graph.add_edge(&v2, &v0);
+        b.iter(|| {
+            let _k = graph.is_cyclic();
+        })
+    });
+    c.bench_function("remove 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            for i in 1..=10 {
+                let v1 = graph.add_vertex(i);
+                graph.remove(&v1);
+            }
+        })
+    });
+    c.bench_function("remove 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            for i in 1..=100 {
+                let v1 = graph.add_vertex(i);
+                graph.remove(&v1);
+            }
+        })
+    });
+    c.bench_function("remove 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            for i in 1..=500 {
+                let v1 = graph.add_vertex(i);
+                graph.remove(&v1);
+            }
+        })
+    });
+    c.bench_function("remove 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            for i in 1..=1000 {
+                let v1 = graph.add_vertex(i);
+                graph.remove(&v1);
+            }
+        })
+    });
+    c.bench_function("remove_edge 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            let mut v1 = graph.add_vertex(0);
+
+            for i in 1..=10 {
+                let v2 = graph.add_vertex(i);
+                graph.add_edge(&v1, &v2);
+                v1 = v2.clone();
+                graph.remove_edge(&v1, &v2);
+            }
+        })
+    });
+    c.bench_function("remove_edge 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            let mut v1 = graph.add_vertex(0);
+
+            for i in 1..=100 {
+                let v2 = graph.add_vertex(i);
+                graph.add_edge(&v1, &v2);
+                v1 = v2.clone();
+                graph.remove_edge(&v1, &v2);
+            }
+        })
+    });
+
+    c.bench_function("remove_edge 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            let mut v1 = graph.add_vertex(0);
+
+            for i in 1..=500 {
+                let v2 = graph.add_vertex(i);
+                graph.add_edge(&v1, &v2);
+                v1 = v2.clone();
+                graph.remove_edge(&v1, &v2);
+            }
+        })
+    });
+
+    c.bench_function("remove_edge 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            let mut v1 = graph.add_vertex(0);
+
+            for i in 1..=1000 {
+                let v2 = graph.add_vertex(i);
+                graph.add_edge(&v1, &v2);
+                v1 = v2.clone();
+                graph.remove_edge(&v1, &v2);
+            }
+        })
+    });
+
+    c.bench_function("reserve 1", |b| {
+        let mut graph: Graph<usize> = Graph::with_capacity(10);
+
+        for i in 1..=10 {
+            graph.add_vertex(i);
+        }
+
         b.iter(|| {
             graph.reserve(10);
         })
     });
-    c.bench_function("retain", |b| {
+    c.bench_function("reserve 2", |b| {
+        let mut graph: Graph<usize> = Graph::with_capacity(100);
+
+        for i in 1..=100 {
+            graph.add_vertex(i);
+        }
+
+        b.iter(|| {
+            graph.reserve(100);
+        })
+    });
+    c.bench_function("reserve 3", |b| {
+        let mut graph: Graph<usize> = Graph::with_capacity(500);
+
+        for i in 1..=500 {
+            graph.add_vertex(i);
+        }
+
+        b.iter(|| {
+            graph.reserve(500);
+        })
+    });
+    c.bench_function("reserve 4", |b| {
+        let mut graph: Graph<usize> = Graph::with_capacity(1000);
+
+        for i in 1..=1000 {
+            graph.add_vertex(i);
+        }
+
+        b.iter(|| {
+            graph.reserve(1000);
+        })
+    });
+    c.bench_function("retain 1", |b| {
         let mut graph: Graph<usize> = Graph::new();
 
-        graph.add_vertex(1);
-        graph.add_vertex(2);
-        graph.add_vertex(2);
-        graph.add_vertex(2);
-        graph.add_vertex(3);
+        for i in 1..=10 {
+            graph.add_vertex(i);
+        }
         b.iter(|| {
             graph.retain(|v| *v != 2);
         })
     });
-    c.bench_function("roots_count", |b| {
+    c.bench_function("retain 2", |b| {
         let mut graph: Graph<usize> = Graph::new();
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
-        b.iter(|| {
-            graph.add_edge(&v1, &v2).unwrap();
-            graph.add_edge(&v3, &v1).unwrap();
-            graph.add_edge(&v1, &v4).unwrap();
 
+        for i in 1..=100 {
+            graph.add_vertex(i);
+        }
+        b.iter(|| {
+            graph.retain(|v| *v != 2);
+        })
+    });
+    c.bench_function("retain 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        for i in 1..=500 {
+            graph.add_vertex(i);
+        }
+        b.iter(|| {
+            graph.retain(|v| *v != 2);
+        })
+    });
+    c.bench_function("retain 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        for i in 1..=1000 {
+            graph.add_vertex(i);
+        }
+        b.iter(|| {
+            graph.retain(|v| *v != 2);
+        })
+    });
+    c.bench_function("roots_count 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.roots_count();
+        })
+    });
+    c.bench_function("roots_count 2", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.roots_count();
+        })
+    });
+    c.bench_function("roots_count 3", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            let _k = graph.roots_count();
+        })
+    });
+    c.bench_function("roots_count 4", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
             let _k = graph.roots_count();
         })
     });
 
-    c.bench_function("shrink_to_fit", |b| {
-        let mut graph: Graph<usize> = Graph::with_capacity(5);
+    c.bench_function("shrink_to_fit 1", |b| {
+        let mut graph: Graph<usize> = Graph::with_capacity(10);
 
         b.iter(|| {
             graph.shrink_to_fit();
         })
     });
-    c.bench_function("vertex_count", |b| {
-        let mut graph: Graph<usize> = Graph::new();
+    c.bench_function("shrink_to_fit 2", |b| {
+        let mut graph: Graph<usize> = Graph::with_capacity(100);
+
         b.iter(|| {
-            graph.add_vertex(1);
-            graph.add_vertex(2);
-            graph.add_vertex(3);
+            graph.shrink_to_fit();
+        })
+    });
+    c.bench_function("shrink_to_fit 3", |b| {
+        let mut graph: Graph<usize> = Graph::with_capacity(500);
+
+        b.iter(|| {
+            graph.shrink_to_fit();
+        })
+    });
+    c.bench_function("shrink_to_fit 4", |b| {
+        let mut graph: Graph<usize> = Graph::with_capacity(1000);
+
+        b.iter(|| {
+            graph.shrink_to_fit();
+        })
+    });
+    c.bench_function("vertex_count 1", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+
+        for i in 1..=10 {
+            graph.add_vertex(i);
+        }
+        b.iter(|| {
             let _k = graph.vertex_count();
         })
     });
-}
-
-// includes benches for :
-// 1. dfs(&self) -> Dfs<T>
-// 2. bfs(&self) -> Bfs<T>
-// 3. vertices(&self) -> VertexIter
-// 4. roots(&self) -> VertexIter
-fn bench_iterators(c: &mut Criterion) {
-    c.bench_function("dfs", |b| {
+    c.bench_function("vertex_count 2", |b| {
         let mut graph: Graph<usize> = Graph::new();
-        let mut vertices = vec![];
 
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
-
-        graph.add_edge(&v1, &v2).unwrap();
-        graph.add_edge(&v3, &v1).unwrap();
-        graph.add_edge(&v1, &v4).unwrap();
+        for i in 1..=100 {
+            graph.add_vertex(i);
+        }
         b.iter(|| {
-            for v in graph.dfs() {
-                vertices.push(v);
-            }
+            let _k = graph.vertex_count();
         })
     });
-
-    c.bench_function("bfs", |b| {
+    c.bench_function("vertex_count 3", |b| {
         let mut graph: Graph<usize> = Graph::new();
-        let mut vertices = vec![];
 
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
-        let v5 = graph.add_vertex(4);
-        let v6 = graph.add_vertex(5);
-        let v7 = graph.add_vertex(6);
-
-        graph.add_edge(&v1, &v2).unwrap();
-        graph.add_edge(&v3, &v1).unwrap();
-        graph.add_edge(&v1, &v4).unwrap();
-        graph.add_edge(&v1, &v7).unwrap();
-        graph.add_edge(&v2, &v5).unwrap();
-        graph.add_edge(&v5, &v6).unwrap();
+        for i in 1..=500 {
+            graph.add_vertex(i);
+        }
         b.iter(|| {
-            for v in graph.bfs() {
-                vertices.push(v);
-            }
+            let _k = graph.vertex_count();
         })
     });
-
-    c.bench_function("vertices", |b| {
-        let mut graph: Graph<usize> = Graph::new();
-        let mut vertices = vec![];
-
-        let _v1 = graph.add_vertex(0);
-        let _v2 = graph.add_vertex(1);
-        let _v3 = graph.add_vertex(2);
-        let _v4 = graph.add_vertex(3);
-        b.iter(|| {
-            for v in graph.vertices() {
-                vertices.push(v);
-            }
-        })
-    });
-
-    c.bench_function("roots", |b| {
-        let mut graph: Graph<usize> = Graph::new();
-        let mut roots = vec![];
-
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
-
-        graph.add_edge(&v1, &v2).unwrap();
-        graph.add_edge(&v3, &v1).unwrap();
-        graph.add_edge(&v1, &v4).unwrap();
-        b.iter(|| {
-            for v in graph.roots() {
-                roots.push(v);
-            }
-        })
-    });
-}
-
-// includes benches for :
-// 1. in_neighbors(&self, id: &VertexId) -> VertexIter
-// 2. in_neighbors_count(&self, id: &VertexId) -> usize
-// 3. neighbors(&self, id: &VertexId) -> VertexIter
-// 4. neighbors_count(&self, id: &VertexId) -> usize
-// 5. out_neighbors(&self, id: &VertexId) -> VertexIter
-// 6. out_neighbors_count(&self, id: &VertexId) -> usize
-fn bench_neighbor_functions(c: &mut Criterion) {
-    c.bench_function("neighbors_count", |b| {
+    c.bench_function("vertex_count 4", |b| {
         let mut graph: Graph<usize> = Graph::new();
 
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
-
-        graph.add_edge(&v1, &v2).unwrap();
-        graph.add_edge(&v3, &v1).unwrap();
-        graph.add_edge(&v1, &v4).unwrap();
+        for i in 1..=1000 {
+            graph.add_vertex(i);
+        }
         b.iter(|| {
-            let _k = graph.neighbors_count(&v1);
-        })
-    });
-    c.bench_function("in_neighbors_count", |b| {
-        let mut graph: Graph<usize> = Graph::new();
-
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
-
-        graph.add_edge(&v1, &v2).unwrap();
-        graph.add_edge(&v3, &v1).unwrap();
-        graph.add_edge(&v1, &v4).unwrap();
-        b.iter(|| {
-            let _k = graph.in_neighbors_count(&v1);
-        })
-    });
-    c.bench_function("out_neighbors_count", |b| {
-        let mut graph: Graph<usize> = Graph::new();
-
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
-        let v5 = graph.add_vertex(4);
-
-        graph.add_edge(&v1, &v2).unwrap();
-        graph.add_edge(&v3, &v1).unwrap();
-        graph.add_edge(&v1, &v4).unwrap();
-        graph.add_edge(&v2, &v5).unwrap();
-        graph.add_edge(&v2, &v3).unwrap();
-        b.iter(|| {
-            let _k = graph.out_neighbors_count(&v1);
-            let _l = graph.out_neighbors_count(&v2);
-        })
-    });
-    c.bench_function("in_neighbors", |b| {
-        let mut graph: Graph<usize> = Graph::new();
-        let mut neighbors = vec![];
-
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
-
-        graph.add_edge(&v1, &v2).unwrap();
-        graph.add_edge(&v3, &v1).unwrap();
-        graph.add_edge(&v1, &v4).unwrap();
-        b.iter(|| {
-            for v in graph.in_neighbors(&v1) {
-                neighbors.push(v);
-            }
-        })
-    });
-    c.bench_function("out_neighbors", |b| {
-        let mut graph: Graph<usize> = Graph::new();
-        let mut neighbors = vec![];
-
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
-
-        graph.add_edge(&v1, &v2).unwrap();
-        graph.add_edge(&v3, &v1).unwrap();
-        graph.add_edge(&v1, &v4).unwrap();
-        b.iter(|| {
-            for v in graph.out_neighbors(&v1) {
-                neighbors.push(v);
-            }
-        })
-    });
-    c.bench_function("neighbors", |b| {
-        let mut graph: Graph<usize> = Graph::new();
-        let mut neighbors = vec![];
-
-        let v1 = graph.add_vertex(0);
-        let v2 = graph.add_vertex(1);
-        let v3 = graph.add_vertex(2);
-        let v4 = graph.add_vertex(3);
-
-        graph.add_edge(&v1, &v2).unwrap();
-        graph.add_edge(&v3, &v1).unwrap();
-        graph.add_edge(&v1, &v4).unwrap();
-        b.iter(|| {
-            for v in graph.neighbors(&v1) {
-                neighbors.push(v);
-            }
+            let _k = graph.vertex_count();
         })
     });
 }
