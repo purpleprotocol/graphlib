@@ -3,7 +3,7 @@
 use crate::graph::Graph;
 use crate::vertex_id::VertexId;
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet,};
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -13,6 +13,8 @@ pub struct Dfs<'a, T> {
     color_map: HashMap<Arc<VertexId>, Color>,
     roots_stack: Vec<Arc<VertexId>>,
     iterable: &'a Graph<T>,
+    /// A cached answer to the question: does this Graph contain cycles.
+    cached_cyclic: Option<bool>,
 }
 
 #[derive(Debug)]
@@ -47,70 +49,51 @@ impl<'a, T> Dfs<'a, T> {
             recursion_stack: Vec::with_capacity(graph.vertex_count()),
             roots_stack,
             iterable: graph,
+            cached_cyclic: None,
         }
     }
 
     /// Returns true if the iterated graph has a cycle.
-    pub fn is_cyclic(&mut self) -> bool {
-        while !self.roots_stack.is_empty() {
-            let root = self.roots_stack[self.roots_stack.len() - 1].clone();
+    pub fn is_cyclic(&mut self,) -> bool {
+        //Check for a cached answer.
+        if let Some(cyclic) = self.cached_cyclic { return cyclic }
 
-            // No vertices have been visited yet,
-            // so we begin from the current root.
-            if self.recursion_stack.is_empty() {
-                self.recursion_stack.push(root.clone());
-                self.color_map.insert(root.clone(), Color::Grey);
-            }
+        //Calculate the answer.
+        let cyclic = (|| {
+            //The vertices pending processing.
+            let mut pending_stack = Vec::new();
+            //The ids of all the visited vertices.
+            let mut visited = HashSet::new();
+            
+            //Iterate all roots to check all paths.
+            for root in self.iterable.roots() {
+                //This indicates that we have not encountered an already visited vertex
+                let mut root_visited = HashSet::new();
 
-            let mut current = self.recursion_stack.pop().unwrap();
-
-            loop {
-                if self.iterable.out_neighbors_count(current.as_ref()) == 0
-                    && !self.recursion_stack.is_empty()
-                {
-                    // Mark as processed
-                    self.color_map.insert(current.clone(), Color::Black);
-
-                    // Set new current as popped value from recursion stack
-                    current = self.recursion_stack.pop().unwrap();
-                    continue;
+                pending_stack.push(*root);
+                //Process all pending vertices.
+                while let Some(v) = pending_stack.pop() {
+                    //If true This path has found a cycle.
+                    if !root_visited.insert(v) { return true }
+                    
+                    //Add all of its outbound neibours to be processed.
+                    for &v in self.iterable.out_neighbors(&v) {
+                        //If this vertex exists in visited then we have already checked it for cycles.
+                        if !visited.contains(&v) {
+                            pending_stack.push(v)
+                        }
+                    }
                 }
 
-                break;
+                //Move all of the vertices visited in this check into the previously visited pool.
+                visited.extend(root_visited);
             }
 
-            let mut all_are_black = true;
+            false
+        })();
 
-            // Traverse current neighbors
-            for n in self.iterable.out_neighbors(current.as_ref()) {
-                let reference = Arc::from(*n);
-
-                if let Some(Color::White) = self.color_map.get(&reference) {
-                    self.recursion_stack.push(current.clone());
-                    self.recursion_stack.push(reference.clone());
-                    self.color_map.insert(reference, Color::Grey);
-                    all_are_black = false;
-                    break;
-                }
-
-                // This means there is a cycle
-                if let Some(Color::Grey) = self.color_map.get(&reference) {
-                    return true;
-                }
-            }
-
-            if all_are_black {
-                self.color_map.insert(current.clone(), Color::Black);
-            }
-
-            // Begin traversing from next root if the
-            // recursion stack is empty.
-            if self.recursion_stack.is_empty() {
-                self.roots_stack.pop();
-            }
-        }
-
-        false
+        self.cached_cyclic = Some(cyclic);
+        return cyclic;
     }
 }
 
