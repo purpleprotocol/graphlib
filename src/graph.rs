@@ -666,13 +666,10 @@ impl<T> Graph<T> {
     /// assert_eq!(neighbors[0], &v3);
     /// ```
     pub fn in_neighbors(&self, id: &VertexId) -> VertexIter<'_> {
-        let mut collection: Vec<&VertexId> = vec![];
-
-        if let Some(inbounds) = self.inbound_table.get(id) {
-            collection = inbounds.iter().map(|v| v.as_ref()).collect();
-        };
-
-        VertexIter::new(collection)
+        match self.inbound_table.get(id) {
+            Some(neighbors) => VertexIter(Box::new(neighbors.iter().map(AsRef::as_ref,),),),
+            None => VertexIter(Box::new(std::iter::empty(),),),
+        }
     }
 
     /// Returns an iterator over the outbound neighbors
@@ -704,16 +701,13 @@ impl<T> Graph<T> {
     /// assert_eq!(neighbors[1], &v4);
     /// ```
     pub fn out_neighbors(&self, id: &VertexId) -> VertexIter<'_> {
-        let mut collection: Vec<&VertexId> = vec![];
-
-        if let Some(outbounds) = self.outbound_table.get(id) {
-            collection = outbounds.iter().map(|v| v.as_ref()).collect();
-        };
-
-        VertexIter::new(collection)
+        match self.outbound_table.get(id,) {
+            Some(iter) => VertexIter(Box::new(iter.iter().map(AsRef::as_ref,),),),
+            None => VertexIter(Box::new(std::iter::empty(),),),
+        }
     }
 
-    /// Returns an iterator over the outbound neighbors
+    /// Returns an iterator over the inbound and outbound neighbors
     /// of the vertex with the given id.
     ///
     /// ## Example
@@ -743,26 +737,13 @@ impl<T> Graph<T> {
     /// assert_eq!(neighbors[2], &v3);
     /// ```
     pub fn neighbors(&self, id: &VertexId) -> VertexIter<'_> {
-        let mut collection: Vec<&VertexId> = vec![];
+        let mut visited = HashSet::new();
+        let neighbors = self.out_neighbors(id,)
+            .chain(self.in_neighbors(id,),)
+            //Remove duplicates.
+            .filter(move |&&v,| visited.insert(v,),);
 
-        match (self.outbound_table.get(id), self.inbound_table.get(id)) {
-            (Some(outbounds), None) => {
-                collection = outbounds.iter().map(|v| v.as_ref()).collect();
-            }
-            (None, Some(inbounds)) => {
-                collection = inbounds.iter().map(|v| v.as_ref()).collect();
-            }
-            (Some(outbounds), Some(inbounds)) => {
-                collection = outbounds.iter().map(|v| v.as_ref()).collect();
-
-                let inbounds: Vec<&VertexId> = inbounds.iter().map(|v| v.as_ref()).collect();
-
-                collection.extend_from_slice(&inbounds);
-            }
-            (None, None) => {} // Do nothing
-        };
-
-        VertexIter::new(collection)
+        VertexIter(Box::new(neighbors,),)
     }
 
     /// Returns an iterator over the root vertices
@@ -793,9 +774,7 @@ impl<T> Graph<T> {
     /// assert_eq!(roots[0], &v3);
     /// ```
     pub fn roots(&self) -> VertexIter<'_> {
-        let collection: Vec<&VertexId> = self.roots.iter().map(|v| v.as_ref()).collect();
-
-        VertexIter::new(collection)
+        VertexIter(Box::new(self.roots.iter().map(AsRef::as_ref,),),)
     }
 
     /// Returns an iterator over all of the
@@ -821,9 +800,7 @@ impl<T> Graph<T> {
     /// assert_eq!(vertices.len(), 4);
     /// ```
     pub fn vertices(&self) -> VertexIter<'_> {
-        let collection: Vec<&VertexId> = self.vertices.iter().map(|(v, _)| v.as_ref()).collect();
-
-        VertexIter::new(collection)
+        VertexIter(Box::new(self.vertices.keys().map(AsRef::as_ref,),),)
     }
 
     /// Returns an iterator over the vertices
