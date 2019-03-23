@@ -831,30 +831,27 @@ impl<T> Graph<T> {
     ///
     /// ## Example
     /// ```rust
+    /// # #[macro_use] extern crate graphlib; fn main() {
     /// use graphlib::Graph;
-    ///
+    /// use std::collections::HashSet;
+    /// 
     /// let mut graph: Graph<usize> = Graph::new();
-    /// let mut vertices = vec![];
-    ///
+    /// 
     /// let v1 = graph.add_vertex(0);
     /// let v2 = graph.add_vertex(1);
     /// let v3 = graph.add_vertex(2);
     /// let v4 = graph.add_vertex(3);
-    ///
+    /// 
     /// graph.add_edge(&v1, &v2).unwrap();
     /// graph.add_edge(&v3, &v1).unwrap();
     /// graph.add_edge(&v1, &v4).unwrap();
-    ///
-    /// // Iterate over vertices
-    /// for v in graph.dfs() {
-    ///     vertices.push(v);
-    /// }
-    ///
-    /// assert_eq!(vertices.len(), 4);
-    /// assert_eq!(vertices[0], &v3);
-    /// assert_eq!(vertices[1], &v1);
-    /// assert_eq!(vertices[2], &v2);
-    /// assert_eq!(vertices[3], &v4);
+    /// 
+    /// let mut dfs = graph.dfs();
+    /// 
+    /// assert_eq!(dfs.next(), Some(&v3));
+    /// assert_eq!(dfs.next(), Some(&v1));
+    /// assert!(set![&v2, &v4] == dfs.collect());
+    /// # }
     /// ```
     pub fn dfs(&self) -> Dfs<'_, T> {
         Dfs::new(self)
@@ -920,8 +917,7 @@ mod tests {
     #[test]
     fn dfs() {
         let mut graph: Graph<usize> = Graph::new();
-        let mut vertices = vec![];
-
+        
         let v1 = graph.add_vertex(0);
         let v2 = graph.add_vertex(1);
         let v3 = graph.add_vertex(2);
@@ -931,47 +927,45 @@ mod tests {
         graph.add_edge(&v3, &v1).unwrap();
         graph.add_edge(&v1, &v4).unwrap();
 
-        // Iterate over vertices
-        for v in graph.dfs() {
-            vertices.push(v);
-        }
+        let mut dfs = graph.dfs();
 
-        assert_eq!(vertices.len(), 4);
-        assert_eq!(vertices[0], &v3);
-        assert_eq!(vertices[1], &v1);
-        assert_eq!(vertices[2], &v2);
-        assert_eq!(vertices[3], &v4);
+        assert_eq!(dfs.next(), Some(&v3));
+        assert_eq!(dfs.next(), Some(&v1));
+        assert!(set![&v2, &v4] == dfs.collect());
     }
 
     #[test]
     fn dfs_mul_roots() {
         let mut graph: Graph<usize> = Graph::new();
-        let mut vertices = vec![];
-
+        
         let v1 = graph.add_vertex(0);
         let v2 = graph.add_vertex(1);
         let v3 = graph.add_vertex(2);
         let v4 = graph.add_vertex(3);
 
-        let v5 = graph.add_vertex(4);
-        let v6 = graph.add_vertex(5);
-
         graph.add_edge(&v1, &v2).unwrap();
         graph.add_edge(&v3, &v1).unwrap();
         graph.add_edge(&v1, &v4).unwrap();
+
+        let v5 = graph.add_vertex(4);
+        let v6 = graph.add_vertex(5);
+
         graph.add_edge(&v5, &v6).unwrap();
 
         // Iterate over vertices
-        for v in graph.dfs() {
-            vertices.push(v);
+        let mut dfs = graph.dfs();
+        
+        for _ in 0..2 {
+            let v = dfs.next();
+            
+            if v == Some(&v3) {
+                assert_eq!(dfs.next(), Some(&v1));
+                assert!(set![&v2, &v4] == (&mut dfs).take(2).collect());
+            } else if v == Some(&v5) {
+                assert_eq!(dfs.next(), Some(&v6));
+            } else { panic!("Not a root node") }
         }
 
-        assert_eq!(vertices.len(), 6);
-        assert_eq!(vertices[0], &v5);
-        assert_eq!(vertices[1], &v6);
-        assert_eq!(vertices[2], &v3);
-        assert_eq!(vertices[3], &v1);
-        assert_eq!(vertices[4], &v2);
-        assert_eq!(vertices[5], &v4);
+        assert_eq!(dfs.count(), 0, "There were remaining nodes");
     }
 }
