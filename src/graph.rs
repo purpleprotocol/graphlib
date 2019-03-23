@@ -522,9 +522,9 @@ impl<T> Graph<T> {
     /// graph.add_edge(&v3, &v4).unwrap();
     ///
     /// assert!(!graph.is_cyclic());
-    ///
+    /// 
     /// graph.add_edge(&v3, &v1);
-    ///
+    /// 
     /// assert!(graph.is_cyclic());
     /// ```
     pub fn is_cyclic(&self) -> bool {

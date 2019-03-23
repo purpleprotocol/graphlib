@@ -60,23 +60,26 @@ impl<'a, T> Dfs<'a, T> {
 
         //Calculate the answer.
         let cyclic = (|| {
+            //If there are no roots then there must be cycles.
+            if self.iterable.roots_count() == 0 { return true }
+
             //The vertices pending processing.
             let mut pending_stack = Vec::new();
             //The ids of all the visited vertices.
             let mut visited = HashSet::new();
+            //This is all the vertices which have been visited by the current root.
+            let mut root_visited = HashSet::new();
             
             //Iterate all roots to check all paths.
             for root in self.iterable.roots() {
-                //This indicates that we have not encountered an already visited vertex
-                let mut root_visited = HashSet::new();
-
                 pending_stack.push(*root);
+
                 //Process all pending vertices.
                 while let Some(v) = pending_stack.pop() {
-                    //If true This path has found a cycle.
+                    //If true there is a cycle.
                     if !root_visited.insert(v) { return true }
-                    
-                    //Add all of its outbound neibours to be processed.
+
+                    //Add all of this vertexes outbound neibours to be processed.
                     for &v in self.iterable.out_neighbors(&v) {
                         //If this vertex exists in visited then we have already checked it for cycles.
                         if !visited.contains(&v) {
@@ -85,8 +88,8 @@ impl<'a, T> Dfs<'a, T> {
                     }
                 }
 
-                //Move all of the vertices visited in this check into the previously visited pool.
-                visited.extend(root_visited);
+                //Forget all the vertexes visited from this root specifically.
+                visited.extend(root_visited.drain());
             }
 
             false
