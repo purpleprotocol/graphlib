@@ -12,8 +12,10 @@ use std::iter::{Cloned, Chain, Peekable,};
 pub struct Dfs<'a, T> {
     /// All the vertices to be checked with the roots coming first.
     unchecked: Peekable<Cloned<Chain<VertexIter<'a>, VertexIter<'a>>>>,
-    /// All previously visited vertices.
-    visited: HashSet<VertexId>,
+    /// All black vertices.
+    black: HashSet<VertexId>,
+    /// All grey vertices.
+    grey: HashSet<VertexId>,
     /// All vertices pending processing.
     pending_stack: Vec<VertexId>,
     /// The Graph being iterated.
@@ -32,7 +34,8 @@ impl<'a, T> Dfs<'a, T> {
             unchecked,
             iterable: graph,
             cached_cyclic: false,
-            visited: HashSet::new(),
+            grey: HashSet::new(),
+            black: HashSet::new(),
             pending_stack: Vec::new(),
         }
     }
@@ -61,12 +64,15 @@ impl<'a, T> Dfs<'a, T> {
     fn process_vertex(&mut self,) -> Option<&'a VertexId> {
         //We have traversed this partition of the graph, move on.
         if self.pending_stack.is_empty() {
+            //Mark all the grey vertices black.
+            self.black.extend(self.grey.drain(),);
+
             //Spliting the borrows for the borrow checker.
             let unchecked = &mut self.unchecked;
-            let visited = &self.visited;
+            let black = &self.black;
 
             //Search for an unprocessed vertex.
-            let next = unchecked.find(move |v,| !visited.contains(v));
+            let next = unchecked.find(move |v,| !black.contains(v));
             
             //We found a new vertex.
             if let Some(v) = next {
@@ -79,7 +85,7 @@ impl<'a, T> Dfs<'a, T> {
         //Filter cycles.
         .filter_map(|v,| {
             //If this vertex forms a cycle do not return it.
-            if !self.visited.insert(*v) {
+            if !self.grey.insert(*v) {
                 self.cached_cyclic = true;
 
                 return None
@@ -88,7 +94,7 @@ impl<'a, T> Dfs<'a, T> {
             //Add all of its neighbours to be processed.
             for v in self.iterable.out_neighbors(v) {
                 //This neighbour forms a cycle don't process it.
-                if self.visited.contains(v) { self.cached_cyclic = true }
+                if self.grey.contains(v) { self.cached_cyclic = true }
                 else { self.pending_stack.push(*v) }
             }
 
@@ -101,13 +107,12 @@ impl<'a, T> Iterator for Dfs<'a, T> {
     type Item = &'a VertexId;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining = self.iterable.vertex_count() - self.visited.len();
+        let remaining = self.iterable.vertex_count() - self.black.len();
 
-        (remaining, Some(remaining))
+        (0, Some(remaining))
     }
-    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        (0..self.size_hint().0).filter_map(move |_,| self.process_vertex()).next()
+        (0..self.size_hint().1.unwrap()).filter_map(move |_,| self.process_vertex()).next()
     }
 }
 
@@ -139,5 +144,20 @@ mod tests {
 
             assert!(dfs.is_cyclic());
         }
+    }
+    #[test]
+    fn not_cyclic() {
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(());
+        let v2 = graph.add_vertex(());
+        let v3 = graph.add_vertex(());
+
+        graph.add_edge(&v1, &v2,);
+        graph.add_edge(&v3, &v2,);
+        
+        graph.add_vertex(());
+
+        assert!(graph.is_cyclic() == false,);
     }
 }
