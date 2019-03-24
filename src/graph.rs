@@ -522,9 +522,9 @@ impl<T> Graph<T> {
     /// graph.add_edge(&v3, &v4).unwrap();
     ///
     /// assert!(!graph.is_cyclic());
-    ///
+    /// 
     /// graph.add_edge(&v3, &v1);
-    ///
+    /// 
     /// assert!(graph.is_cyclic());
     /// ```
     pub fn is_cyclic(&self) -> bool {
@@ -666,13 +666,10 @@ impl<T> Graph<T> {
     /// assert_eq!(neighbors[0], &v3);
     /// ```
     pub fn in_neighbors(&self, id: &VertexId) -> VertexIter<'_> {
-        let mut collection: Vec<&VertexId> = vec![];
-
-        if let Some(inbounds) = self.inbound_table.get(id) {
-            collection = inbounds.iter().map(|v| v.as_ref()).collect();
-        };
-
-        VertexIter::new(collection)
+        match self.inbound_table.get(id) {
+            Some(neighbors) => VertexIter(Box::new(neighbors.iter().map(AsRef::as_ref,),),),
+            None => VertexIter(Box::new(std::iter::empty(),),),
+        }
     }
 
     /// Returns an iterator over the outbound neighbors
@@ -704,16 +701,13 @@ impl<T> Graph<T> {
     /// assert_eq!(neighbors[1], &v4);
     /// ```
     pub fn out_neighbors(&self, id: &VertexId) -> VertexIter<'_> {
-        let mut collection: Vec<&VertexId> = vec![];
-
-        if let Some(outbounds) = self.outbound_table.get(id) {
-            collection = outbounds.iter().map(|v| v.as_ref()).collect();
-        };
-
-        VertexIter::new(collection)
+        match self.outbound_table.get(id,) {
+            Some(iter) => VertexIter(Box::new(iter.iter().map(AsRef::as_ref,),),),
+            None => VertexIter(Box::new(std::iter::empty(),),),
+        }
     }
 
-    /// Returns an iterator over the outbound neighbors
+    /// Returns an iterator over the inbound and outbound neighbors
     /// of the vertex with the given id.
     ///
     /// ## Example
@@ -743,26 +737,13 @@ impl<T> Graph<T> {
     /// assert_eq!(neighbors[2], &v3);
     /// ```
     pub fn neighbors(&self, id: &VertexId) -> VertexIter<'_> {
-        let mut collection: Vec<&VertexId> = vec![];
+        let mut visited = HashSet::new();
+        let neighbors = self.out_neighbors(id,)
+            .chain(self.in_neighbors(id,),)
+            //Remove duplicates.
+            .filter(move |&&v,| visited.insert(v,),);
 
-        match (self.outbound_table.get(id), self.inbound_table.get(id)) {
-            (Some(outbounds), None) => {
-                collection = outbounds.iter().map(|v| v.as_ref()).collect();
-            }
-            (None, Some(inbounds)) => {
-                collection = inbounds.iter().map(|v| v.as_ref()).collect();
-            }
-            (Some(outbounds), Some(inbounds)) => {
-                collection = outbounds.iter().map(|v| v.as_ref()).collect();
-
-                let inbounds: Vec<&VertexId> = inbounds.iter().map(|v| v.as_ref()).collect();
-
-                collection.extend_from_slice(&inbounds);
-            }
-            (None, None) => {} // Do nothing
-        };
-
-        VertexIter::new(collection)
+        VertexIter(Box::new(neighbors,),)
     }
 
     /// Returns an iterator over the root vertices
@@ -793,9 +774,7 @@ impl<T> Graph<T> {
     /// assert_eq!(roots[0], &v3);
     /// ```
     pub fn roots(&self) -> VertexIter<'_> {
-        let collection: Vec<&VertexId> = self.roots.iter().map(|v| v.as_ref()).collect();
-
-        VertexIter::new(collection)
+        VertexIter(Box::new(self.roots.iter().map(AsRef::as_ref,),),)
     }
 
     /// Returns an iterator over all of the
@@ -821,9 +800,7 @@ impl<T> Graph<T> {
     /// assert_eq!(vertices.len(), 4);
     /// ```
     pub fn vertices(&self) -> VertexIter<'_> {
-        let collection: Vec<&VertexId> = self.vertices.iter().map(|(v, _)| v.as_ref()).collect();
-
-        VertexIter::new(collection)
+        VertexIter(Box::new(self.vertices.keys().map(AsRef::as_ref,),),)
     }
 
     /// Returns an iterator over the vertices
@@ -831,30 +808,27 @@ impl<T> Graph<T> {
     ///
     /// ## Example
     /// ```rust
+    /// # #[macro_use] extern crate graphlib; fn main() {
     /// use graphlib::Graph;
-    ///
+    /// use std::collections::HashSet;
+    /// 
     /// let mut graph: Graph<usize> = Graph::new();
-    /// let mut vertices = vec![];
-    ///
+    /// 
     /// let v1 = graph.add_vertex(0);
     /// let v2 = graph.add_vertex(1);
     /// let v3 = graph.add_vertex(2);
     /// let v4 = graph.add_vertex(3);
-    ///
+    /// 
     /// graph.add_edge(&v1, &v2).unwrap();
     /// graph.add_edge(&v3, &v1).unwrap();
     /// graph.add_edge(&v1, &v4).unwrap();
-    ///
-    /// // Iterate over vertices
-    /// for v in graph.dfs() {
-    ///     vertices.push(v);
-    /// }
-    ///
-    /// assert_eq!(vertices.len(), 4);
-    /// assert_eq!(vertices[0], &v3);
-    /// assert_eq!(vertices[1], &v1);
-    /// assert_eq!(vertices[2], &v2);
-    /// assert_eq!(vertices[3], &v4);
+    /// 
+    /// let mut dfs = graph.dfs();
+    /// 
+    /// assert_eq!(dfs.next(), Some(&v3));
+    /// assert_eq!(dfs.next(), Some(&v1));
+    /// assert!(set![&v2, &v4] == dfs.collect());
+    /// # }
     /// ```
     pub fn dfs(&self) -> Dfs<'_, T> {
         Dfs::new(self)
@@ -920,8 +894,7 @@ mod tests {
     #[test]
     fn dfs() {
         let mut graph: Graph<usize> = Graph::new();
-        let mut vertices = vec![];
-
+        
         let v1 = graph.add_vertex(0);
         let v2 = graph.add_vertex(1);
         let v3 = graph.add_vertex(2);
@@ -931,47 +904,45 @@ mod tests {
         graph.add_edge(&v3, &v1).unwrap();
         graph.add_edge(&v1, &v4).unwrap();
 
-        // Iterate over vertices
-        for v in graph.dfs() {
-            vertices.push(v);
-        }
+        let mut dfs = graph.dfs();
 
-        assert_eq!(vertices.len(), 4);
-        assert_eq!(vertices[0], &v3);
-        assert_eq!(vertices[1], &v1);
-        assert_eq!(vertices[2], &v2);
-        assert_eq!(vertices[3], &v4);
+        assert_eq!(dfs.next(), Some(&v3));
+        assert_eq!(dfs.next(), Some(&v1));
+        assert!(set![&v2, &v4] == dfs.collect());
     }
 
     #[test]
     fn dfs_mul_roots() {
         let mut graph: Graph<usize> = Graph::new();
-        let mut vertices = vec![];
-
+        
         let v1 = graph.add_vertex(0);
         let v2 = graph.add_vertex(1);
         let v3 = graph.add_vertex(2);
         let v4 = graph.add_vertex(3);
 
-        let v5 = graph.add_vertex(4);
-        let v6 = graph.add_vertex(5);
-
         graph.add_edge(&v1, &v2).unwrap();
         graph.add_edge(&v3, &v1).unwrap();
         graph.add_edge(&v1, &v4).unwrap();
+
+        let v5 = graph.add_vertex(4);
+        let v6 = graph.add_vertex(5);
+
         graph.add_edge(&v5, &v6).unwrap();
 
         // Iterate over vertices
-        for v in graph.dfs() {
-            vertices.push(v);
+        let mut dfs = graph.dfs();
+        
+        for _ in 0..2 {
+            let v = dfs.next();
+            
+            if v == Some(&v3) {
+                assert_eq!(dfs.next(), Some(&v1));
+                assert!(set![&v2, &v4] == (&mut dfs).take(2).collect());
+            } else if v == Some(&v5) {
+                assert_eq!(dfs.next(), Some(&v6));
+            } else { panic!("Not a root node") }
         }
 
-        assert_eq!(vertices.len(), 6);
-        assert_eq!(vertices[0], &v5);
-        assert_eq!(vertices[1], &v6);
-        assert_eq!(vertices[2], &v3);
-        assert_eq!(vertices[3], &v1);
-        assert_eq!(vertices[4], &v2);
-        assert_eq!(vertices[5], &v4);
+        assert_eq!(dfs.count(), 0, "There were remaining nodes");
     }
 }
