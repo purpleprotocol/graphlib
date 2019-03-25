@@ -4,8 +4,18 @@ use crate::graph::Graph;
 use crate::vertex_id::VertexId;
 
 use hashbrown::HashSet;
+#[cfg(not(feature = "no_std"))]
 use std::collections::VecDeque;
+#[cfg(not(feature = "no_std"))]
 use std::sync::Arc;
+
+#[cfg(feature = "no_std")]
+extern crate alloc;
+#[cfg(feature = "no_std")]
+use alloc::{collections::vec_deque::VecDeque, sync::Arc};
+
+#[cfg(feature = "no_std")]
+use alloc::vec::Vec;
 
 #[derive(Debug)]
 /// Breadth-First Iterator

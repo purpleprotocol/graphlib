@@ -4,7 +4,24 @@ use crate::edge::Edge;
 use crate::iterators::{Bfs, Dfs, VertexIter};
 use crate::vertex_id::VertexId;
 use hashbrown::{HashMap, HashSet};
+#[cfg(not(feature = "no_std"))]
 use std::sync::Arc;
+
+#[cfg(feature = "no_std")]
+use core::iter;
+#[cfg(not(feature = "no_std"))]
+use std::iter;
+
+#[cfg(feature = "no_std")]
+extern crate alloc;
+#[cfg(feature = "no_std")]
+use alloc::boxed::Box;
+#[cfg(feature = "no_std")]
+use alloc::sync::Arc;
+#[cfg(feature = "no_std")]
+use alloc::vec;
+#[cfg(feature = "no_std")]
+use alloc::vec::Vec;
 
 #[derive(Clone, Debug, PartialEq)]
 /// Graph operation error
@@ -668,7 +685,7 @@ impl<T> Graph<T> {
     pub fn in_neighbors(&self, id: &VertexId) -> VertexIter<'_> {
         match self.inbound_table.get(id) {
             Some(neighbors) => VertexIter(Box::new(neighbors.iter().map(AsRef::as_ref))),
-            None => VertexIter(Box::new(std::iter::empty())),
+            None => VertexIter(Box::new(iter::empty())),
         }
     }
 
@@ -703,7 +720,7 @@ impl<T> Graph<T> {
     pub fn out_neighbors(&self, id: &VertexId) -> VertexIter<'_> {
         match self.outbound_table.get(id) {
             Some(iter) => VertexIter(Box::new(iter.iter().map(AsRef::as_ref))),
-            None => VertexIter(Box::new(std::iter::empty())),
+            None => VertexIter(Box::new(iter::empty())),
         }
     }
 

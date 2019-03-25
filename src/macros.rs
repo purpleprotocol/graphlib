@@ -2,7 +2,7 @@
 #[macro_export]
 macro_rules! min {
     ($x: expr) => ($x);
-    ($x: expr, $($z: expr),+) => (::std::cmp::min($x, min!($($z),*)));
+    ($x: expr, $($z: expr),+) => (::core::cmp::min($x, min!($($z),*)));
 }
 
 /// Returns a HashSet containing the passed values.

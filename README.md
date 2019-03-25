@@ -33,6 +33,14 @@ graph.remove(&id1);
 assert_eq!(graph.vertex_count(), 1);
 assert_eq!(graph.edge_count(), 0);
 ```
+
+### Using without `std`
+In `Cargo.toml`:
+```toml
+[dependencies]
+graphlib = {version = "*", features = ["no_std"]}
+```
+
 ### Contributing
 We welcome anyone wishing to contribute to Graphlib! Check out the [issues section][issues] of the repository before starting out.
 

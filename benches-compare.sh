@@ -18,4 +18,22 @@ cargo bench --bench benchmark -- --noplot --save-baseline after && \
 cargo install critcmp --force && \
 
 # Compare the two generated benches
-critcmp before after;
+critcmp before after
+
+#########################
+# Builds for `no_std`
+#########################
+
+# Bench master
+git checkout master && \
+cargo +nightly bench --features no_std --bench benchmark -- --noplot --save-baseline before && \
+
+# Bench current branch
+git checkout ${TRAVIS_COMMIT} && \
+cargo +nightly bench --features no_std --bench benchmark -- --noplot --save-baseline after && \
+
+# Compare the two generated benches
+critcmp before after
+
+
+

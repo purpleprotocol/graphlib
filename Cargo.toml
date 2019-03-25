@@ -4,8 +4,8 @@ version = "0.2.2"
 authors = ["Octavian Oncescu <octavonce@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/purpleprotocol/graphlib"
-keywords = ["graph", "data-structure", "mutable", "graph-algorithm"]
-categories = ["data-structure"]
+keywords = ["graph", "data-structure", "mutable", "graph-algorithm", "no-std"]
+categories = ["data-structure", "no-std"]
 description = "Graphlib is a simple and powerful rust library for the graph data-structure."
 license = "MIT"
 readme = "README.md"
@@ -14,8 +14,8 @@ readme = "README.md"
 travis-ci = { repository = "purpleprotocol/graphlib", branch = "master" }
 
 [dependencies]
-rand = "0.6.0"
-hashbrown = { version = "0.1", features = ["rayon"] }
+rand = "0.6.5"
+hashbrown = { version = "0.1.8", features = ["rayon"] }
 
 [dev-dependencies]
 criterion = "0.2.10"
@@ -27,4 +27,9 @@ harness = false
 [features]
 
 default = []
+# use cargo bench --features sbench only if you want benchmarks with 10 million
+# iterations (may fail on some systems)
 sbench = []
+
+# nightly feature for `no_std`
+no_std = ["hashbrown/nightly", "rand/alloc"]

@@ -1,9 +1,19 @@
 // Copyright 2019 Octavian Oncescu
 
 use crate::vertex_id::VertexId;
+#[cfg(not(feature = "no_std"))]
 use std::hash::Hash;
+#[cfg(not(feature = "no_std"))]
 use std::hash::Hasher;
+#[cfg(not(feature = "no_std"))]
 use std::sync::Arc;
+
+#[cfg(feature = "no_std")]
+extern crate alloc;
+#[cfg(feature = "no_std")]
+use alloc::sync::Arc;
+#[cfg(feature = "no_std")]
+use core::hash::{Hash, Hasher};
 
 #[derive(Clone, Debug)]
 /// Edge internal struct
