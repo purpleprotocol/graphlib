@@ -40,11 +40,7 @@ impl<'a, T> Bfs<'a, T> {
         Bfs {
             queue: VecDeque::with_capacity(graph.vertex_count()),
             current_ptr,
-<<<<<<< HEAD
             visited_set: HashSet::with_capacity(graph.vertex_count()),
-=======
-            visited_set: HashSet::new(),
->>>>>>> Used HashSet in bfs.rs
             roots_stack,
             iterable: graph,
         }
@@ -100,3 +96,4 @@ impl<'a, T> Iterator for Bfs<'a, T> {
         }
     }
 }
+
