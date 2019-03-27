@@ -178,6 +178,6 @@ mod tests {
 
         graph.add_vertex(());
 
-        assert!(graph.is_cyclic() == false,);
+        assert_eq!(graph.is_cyclic(), false);
     }
 }
