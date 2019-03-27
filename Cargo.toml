@@ -1,11 +1,11 @@
 [package]
 name = "graphlib"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Octavian Oncescu <octavonce@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/purpleprotocol/graphlib"
-keywords = ["graph", "data-structure", "mutable", "graph-algorithm", "no-std"]
-categories = ["data-structure", "no-std"]
+keywords = ["graph", "data-structures", "mutable", "graph-algorithm", "no-std"]
+categories = ["data-structures", "no-std"]
 description = "Graphlib is a simple and powerful rust library for the graph data-structure."
 license = "MIT"
 readme = "README.md"
