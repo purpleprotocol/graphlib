@@ -20,14 +20,13 @@ before_script:
 script:
   - cargo build --verbose --all
   - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
-    cargo build --featues no_std --verbose --all;
+    cargo +nightly build --features no_std --verbose --all;
     fi
   - cargo test --verbose --all
   - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
-      cargo test --featues no_std --verbose --all;
-      fi
+      cargo +nightly test --features no_std --verbose --all;
+    fi
 
 
 after_script:
   - ./benches-compare.sh
-  -

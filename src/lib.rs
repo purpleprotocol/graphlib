@@ -44,5 +44,9 @@ mod graph;
 pub mod iterators;
 mod vertex_id;
 
+// use global variables to create VertexId::random()
+use core::sync::atomic::AtomicUsize;
 pub use graph::*;
 pub use vertex_id::*;
+
+static SEED: AtomicUsize = AtomicUsize::new(0);
