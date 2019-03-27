@@ -1,5 +1,8 @@
 // Copyright 2019 Octavian Oncescu
 
+#![cfg_attr(feature = "no_std", feature(alloc))]
+#![cfg_attr(feature = "no_std", no_std)]
+
 //! # Graphlib
 //! Graphlib is a simple and powerful rust library for the graph data-structure.
 //!
@@ -41,5 +44,9 @@ mod graph;
 pub mod iterators;
 mod vertex_id;
 
+// use global variables to create VertexId::random()
+use core::sync::atomic::AtomicUsize;
 pub use graph::*;
 pub use vertex_id::*;
+
+static SEED: AtomicUsize = AtomicUsize::new(0);

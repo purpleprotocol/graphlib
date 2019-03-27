@@ -4,8 +4,16 @@ use crate::graph::Graph;
 use crate::iterators::VertexIter;
 use crate::vertex_id::VertexId;
 
+#[cfg(feature = "no_std")]
+use core::iter::{Chain, Cloned, Peekable};
 use hashbrown::HashSet;
+#[cfg(not(feature = "no_std"))]
 use std::iter::{Chain, Cloned, Peekable};
+
+#[cfg(feature = "no_std")]
+extern crate alloc;
+#[cfg(feature = "no_std")]
+use alloc::vec::Vec;
 
 #[derive(Debug)]
 /// Depth-First Iterator
@@ -170,6 +178,6 @@ mod tests {
 
         graph.add_vertex(());
 
-        assert!(graph.is_cyclic() == false,);
+        assert_eq!(graph.is_cyclic(), false);
     }
 }
