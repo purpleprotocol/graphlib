@@ -19,6 +19,3 @@ cargo install critcmp --force && \
 
 # Compare the two generated benches
 critcmp before after;
-
-
-

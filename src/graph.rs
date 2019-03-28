@@ -189,6 +189,11 @@ impl<T> Graph<T> {
         id
     }
 
+    /// Returns all inserted edges.
+    fn edges(&self) -> Result<(&HashSet<Edge>), GraphErr> {
+        Ok(&self.edges)
+    }
+
     /// Attempts to place a new edge in the graph.
     ///
     /// ## Example
@@ -821,6 +826,11 @@ impl<T> Graph<T> {
         VertexIter(Box::new(self.vertices.keys().map(AsRef::as_ref)))
     }
 
+    /// Returns the vertices hashmap
+    fn hashmap_vertices(&self) -> &HashMap<Arc<VertexId>, (T, Arc<VertexId>)> {
+            &self.vertices
+    }
+
     /// Returns an iterator over the vertices
     /// of the graph in Depth-First Order.
     ///
@@ -902,6 +912,46 @@ impl<T> Graph<T> {
             Some((_, id_ptr)) => Some(id_ptr.as_ref()),
             None => None,
         }
+    }
+
+    /// Creates a file with the dot representation of the graph.
+    /// This method requires the `dot` feature.
+    ///
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// use std::fs::File;
+    /// let mut f = File::create("example1.dot").unwrap();
+    ///
+    /// let mut graph: Graph<String> = Graph::new();
+    ///
+    ///  let v1 = graph.add_vertex("test1".to_string());
+    ///  let v2 = graph.add_vertex("test2".to_string());
+    ///  let v3 = graph.add_vertex("test3".to_string());
+    ///  let v4 = graph.add_vertex("test4".to_string());
+    ///
+    ///  let v5 = graph.add_vertex("test5".to_string());
+    ///  let v6 = graph.add_vertex("test6".to_string());
+    ///
+    ///  graph.add_edge(&v1, &v2).unwrap();
+    ///  graph.add_edge(&v3, &v1).unwrap();
+    ///  graph.add_edge(&v1, &v4).unwrap();
+    ///  graph.add_edge(&v5, &v6).unwrap();
+    ///
+    ///  Graph::<String>::to_dot(&graph, &mut f);
+    /// ```
+    #[cfg(feature = "dot")]
+    pub fn to_dot(graph: &Graph<impl ::std::fmt::Display + Clone + Ord>, output: &mut impl ::std::io::Write) {
+        let vertices = graph.hashmap_vertices();
+        let edges : Vec<(_, _)> = graph.edges().unwrap().iter().map(|w| {
+            let inbound = w.inbound();
+            let outbound = w.outbound();
+
+            (vertices.get(inbound).unwrap().0.clone(), vertices.get(outbound).unwrap().0.clone())
+        }).collect();
+
+        dot::render(&crate::dot::Edges(edges), output).unwrap()
     }
 }
 
