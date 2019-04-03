@@ -830,6 +830,39 @@ impl<T> Graph<T> {
         VertexIter(Box::new(neighbors))
     }
 
+    /// Returns an iterator over all edges that are situated
+    /// in the graph.
+    /// 
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    /// let mut edges = vec![];
+    ///
+    /// let v1 = graph.add_vertex(0);
+    /// let v2 = graph.add_vertex(1);
+    /// let v3 = graph.add_vertex(2);
+    /// let v4 = graph.add_vertex(3);
+    ///
+    /// graph.add_edge(&v1, &v2).unwrap();
+    /// graph.add_edge(&v3, &v1).unwrap();
+    /// graph.add_edge(&v1, &v4).unwrap();
+    ///
+    /// // Iterate over edges
+    /// for v in graph.edges() {
+    ///     edges.push(v);
+    /// }
+    ///
+    /// assert_eq!(edges.len(), 3);
+    /// ```
+    pub fn edges(&self) -> impl Iterator<Item = (&VertexId, &VertexId)> {
+        self
+            .edges
+            .iter()
+            .map(|(e, _)| (e.inbound(), e.outbound()))
+    }
+
     /// Returns an iterator over the root vertices
     /// of the graph.
     ///
