@@ -27,6 +27,7 @@ use alloc::vec::Vec;
 /// Graph operation error
 pub enum GraphErr {
     NoSuchVertex,
+    NoSuchEdge,
     CannotAddEdge,
     InvalidWeight
 }
@@ -272,8 +273,6 @@ impl<T> Graph<T> {
     /// // Adding an edge is idempotent
     /// graph.add_edge_with_weight(&v1, &v2, 0.54543);
     ///
-    /// // Fails on adding an edge between an
-    /// // existing vertex and a non-existing one.
     /// assert_eq!(graph.weight(&v1, &v2), Some(0.54543));
     /// assert_eq!(graph.weight(&v1, &v3), None);
     /// ```
@@ -290,6 +289,46 @@ impl<T> Graph<T> {
         } else {
             None
         }
+    }
+
+    /// Sets the weight of the edge to the new value
+    /// if the edge exists in the graph. Note that
+    /// the given weight must be a number between 
+    /// (and including) `-1.0` and `1.0`.
+    /// 
+    /// ```rust
+    /// use graphlib::{Graph, GraphErr, VertexId};
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    ///
+    /// // Id of vertex that is not place in the graph
+    /// let id = VertexId::random();
+    ///
+    /// let v1 = graph.add_vertex(1);
+    /// let v2 = graph.add_vertex(2);
+    /// let v3 = graph.add_vertex(3);
+    ///
+    /// graph.add_edge_with_weight(&v1, &v2, 0.54543);
+    /// assert_eq!(graph.weight(&v1, &v2), Some(0.54543));
+    /// 
+    /// // Set new weight
+    /// graph.set_weight(&v1, &v2, 0.123);
+    /// assert_eq!(graph.weight(&v1, &v2), Some(0.123));
+    /// ```
+    pub fn set_weight(&mut self, a: &VertexId, b: &VertexId, new_weight: f32) -> Result<(), GraphErr> {
+        if !self.has_edge(a, b) {
+            return Err(GraphErr::NoSuchEdge);
+        }
+
+        if new_weight > 1.0 || new_weight < -1.0 {
+            return Err(GraphErr::InvalidWeight);
+        }
+
+        let a = Arc::from(*a);
+        let b = Arc::from(*b);
+
+        self.edges.insert(Edge::new(a, b), new_weight);
+        Ok(())
     }
 
     /// Checks whether or not exists an edge between
