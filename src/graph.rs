@@ -28,13 +28,14 @@ use alloc::vec::Vec;
 pub enum GraphErr {
     NoSuchVertex,
     CannotAddEdge,
+    InvalidWeight
 }
 
 #[derive(Clone, Debug)]
 /// Graph data-structure
 pub struct Graph<T> {
     vertices: HashMap<Arc<VertexId>, (T, Arc<VertexId>)>,
-    edges: HashSet<Edge>,
+    edges: HashMap<Edge, f32>,
     roots: Vec<Arc<VertexId>>,
     inbound_table: HashMap<Arc<VertexId>, Vec<Arc<VertexId>>>,
     outbound_table: HashMap<Arc<VertexId>, Vec<Arc<VertexId>>>,
@@ -55,7 +56,7 @@ impl<T> Graph<T> {
     pub fn new() -> Graph<T> {
         Graph {
             vertices: HashMap::new(),
-            edges: HashSet::new(),
+            edges: HashMap::new(),
             roots: Vec::new(),
             inbound_table: HashMap::new(),
             outbound_table: HashMap::new(),
@@ -73,14 +74,14 @@ impl<T> Graph<T> {
     pub fn with_capacity(capacity: usize) -> Graph<T> {
         Graph {
             vertices: HashMap::with_capacity(capacity),
-            edges: HashSet::with_capacity(usize::pow(capacity, 2)),
+            edges: HashMap::with_capacity(usize::pow(capacity, 2)),
             roots: Vec::with_capacity(capacity),
             inbound_table: HashMap::with_capacity(capacity),
             outbound_table: HashMap::with_capacity(capacity),
         }
     }
 
-    /// Returns the minimum number of elements the graph can hold without reallocating.
+    /// Returns the current capacity of the graph.
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -189,11 +190,6 @@ impl<T> Graph<T> {
         id
     }
 
-    /// Returns all inserted edges.
-    fn edges(&self) -> Result<(&HashSet<Edge>), GraphErr> {
-        Ok(&self.edges)
-    }
-
     /// Attempts to place a new edge in the graph.
     ///
     /// ## Example
@@ -222,51 +218,77 @@ impl<T> Graph<T> {
             return Ok(());
         }
 
-        let a_prime = self.vertices.get(a);
-        let b_prime = self.vertices.get(b);
+        self.do_add_edge(a, b, 0.0)
+    }
 
-        // Check vertices existence
-        match (a_prime, b_prime) {
-            (Some((_, id_ptr1)), Some((_, id_ptr2))) => {
-                let edge = Edge::new(id_ptr1.clone(), id_ptr2.clone());
+    /// Attempts to place a new edge in the graph.
+    ///
+    /// ## Example
+    /// ```rust
+    /// use graphlib::{Graph, GraphErr, VertexId};
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    ///
+    /// // Id of vertex that is not place in the graph
+    /// let id = VertexId::random();
+    ///
+    /// let v1 = graph.add_vertex(1);
+    /// let v2 = graph.add_vertex(2);
+    ///
+    /// // Adding an edge is idempotent
+    /// graph.add_edge_with_weight(&v1, &v2, 0.3);
+    ///
+    /// // Fails on adding an edge between an
+    /// // existing vertex and a non-existing one.
+    /// assert_eq!(graph.weight(&v1, &v2), Some(0.3));
+    /// ```
+    pub fn add_edge_with_weight(&mut self, a: &VertexId, b: &VertexId, weight: f32) -> Result<(), GraphErr> {
+        if self.has_edge(a, b) {
+            return Ok(());
+        }
 
-                // Push edge
-                self.edges.insert(edge);
+        if weight > 1.0 || weight < -1.0 {
+            return Err(GraphErr::InvalidWeight);
+        }
 
-                // Update outbound table
-                match self.outbound_table.get(id_ptr1) {
-                    Some(outbounds) => {
-                        let mut outbounds = outbounds.clone();
-                        outbounds.push(id_ptr2.clone());
+        self.do_add_edge(a, b, weight)
+    }
 
-                        self.outbound_table.insert(id_ptr1.clone(), outbounds);
-                    }
-                    None => {
-                        self.outbound_table
-                            .insert(id_ptr1.clone(), vec![id_ptr2.clone()]);
-                    }
-                }
+    /// Returns the weight of the specified edge
+    /// if it is listed.
+    /// 
+    /// ```rust
+    /// use graphlib::{Graph, GraphErr, VertexId};
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    ///
+    /// // Id of vertex that is not place in the graph
+    /// let id = VertexId::random();
+    ///
+    /// let v1 = graph.add_vertex(1);
+    /// let v2 = graph.add_vertex(2);
+    /// let v3 = graph.add_vertex(3);
+    ///
+    /// // Adding an edge is idempotent
+    /// graph.add_edge_with_weight(&v1, &v2, 0.54543);
+    ///
+    /// // Fails on adding an edge between an
+    /// // existing vertex and a non-existing one.
+    /// assert_eq!(graph.weight(&v1, &v2), Some(0.54543));
+    /// assert_eq!(graph.weight(&v1, &v3), None);
+    /// ```
+    pub fn weight(&self, a: &VertexId, b: &VertexId) -> Option<f32> {
+        if !self.has_edge(a, b) {
+            return None;
+        }
 
-                // Update inbound table
-                match self.inbound_table.get(id_ptr2) {
-                    Some(inbounds) => {
-                        let mut inbounds = inbounds.clone();
-                        inbounds.push(id_ptr1.clone());
+        let a = Arc::from(*a);
+        let b = Arc::from(*b);
 
-                        self.inbound_table.insert(id_ptr2.clone(), inbounds);
-                    }
-                    None => {
-                        self.inbound_table
-                            .insert(id_ptr2.clone(), vec![id_ptr1.clone()]);
-                    }
-                }
-
-                // Remove outbound vertex from roots
-                self.roots = self.roots.iter().filter(|v| ***v != *b).cloned().collect();
-
-                Ok(())
-            }
-            _ => Err(GraphErr::NoSuchVertex),
+        if let Some(result) = self.edges.get(&Edge::new(a, b)) {
+            Some(result.clone())
+        } else {
+            None
         }
     }
 
@@ -421,7 +443,7 @@ impl<T> Graph<T> {
         }
 
         self.outbound_table.remove(id);
-        self.edges.retain(|e| !e.matches_any(id));
+        self.edges.retain(|e, _| !e.matches_any(id));
         self.roots.retain(|r| r.as_ref() != id);
     }
 
@@ -466,7 +488,7 @@ impl<T> Graph<T> {
         }
 
         if remove {
-            self.edges.retain(|e| !e.matches(a, b));
+            self.edges.retain(|e, _| !e.matches(a, b));
         }
     }
 
@@ -826,11 +848,6 @@ impl<T> Graph<T> {
         VertexIter(Box::new(self.vertices.keys().map(AsRef::as_ref)))
     }
 
-    /// Returns the vertices hashmap
-    fn hashmap_vertices(&self) -> &HashMap<Arc<VertexId>, (T, Arc<VertexId>)> {
-            &self.vertices
-    }
-
     /// Returns an iterator over the vertices
     /// of the graph in Depth-First Order.
     ///
@@ -907,7 +924,7 @@ impl<T> Graph<T> {
 
     /// Attempts to fetch a reference to a stored vertex id
     /// which is equal to the given `VertexId`.
-    pub fn fetch_id_ref<'b>(&'b self, id: &VertexId) -> Option<&'b VertexId> {
+    pub(crate) fn fetch_id_ref<'b>(&'b self, id: &VertexId) -> Option<&'b VertexId> {
         match self.vertices.get(id) {
             Some((_, id_ptr)) => Some(id_ptr.as_ref()),
             None => None,
@@ -943,8 +960,8 @@ impl<T> Graph<T> {
     /// ```
     #[cfg(feature = "dot")]
     pub fn to_dot(graph: &Graph<impl ::std::fmt::Display + Clone + Ord>, output: &mut impl ::std::io::Write) {
-        let vertices = graph.hashmap_vertices();
-        let edges : Vec<(_, _)> = graph.edges().unwrap().iter().map(|w| {
+        let vertices = graph.vertex_hm_ref();
+        let edges : Vec<(_, _)> = graph.edges_hm_ref().unwrap().iter().map(|(w, _)| {
             let inbound = w.inbound();
             let outbound = w.outbound();
 
@@ -952,6 +969,65 @@ impl<T> Graph<T> {
         }).collect();
 
         dot::render(&crate::dot::Edges(edges), output).unwrap()
+    }
+
+    fn do_add_edge(&mut self, a: &VertexId, b: &VertexId, weight: f32) -> Result<(), GraphErr> {
+        let a_prime = self.vertices.get(a);
+        let b_prime = self.vertices.get(b);
+
+        // Check vertices existence
+        match (a_prime, b_prime) {
+            (Some((_, id_ptr1)), Some((_, id_ptr2))) => {
+                let edge = Edge::new(id_ptr1.clone(), id_ptr2.clone());
+
+                // Push edge
+                self.edges.insert(edge, weight);
+
+                // Update outbound table
+                match self.outbound_table.get(id_ptr1) {
+                    Some(outbounds) => {
+                        let mut outbounds = outbounds.clone();
+                        outbounds.push(id_ptr2.clone());
+
+                        self.outbound_table.insert(id_ptr1.clone(), outbounds);
+                    }
+                    None => {
+                        self.outbound_table
+                            .insert(id_ptr1.clone(), vec![id_ptr2.clone()]);
+                    }
+                }
+
+                // Update inbound table
+                match self.inbound_table.get(id_ptr2) {
+                    Some(inbounds) => {
+                        let mut inbounds = inbounds.clone();
+                        inbounds.push(id_ptr1.clone());
+
+                        self.inbound_table.insert(id_ptr2.clone(), inbounds);
+                    }
+                    None => {
+                        self.inbound_table
+                            .insert(id_ptr2.clone(), vec![id_ptr1.clone()]);
+                    }
+                }
+
+                // Remove outbound vertex from roots
+                self.roots = self.roots.iter().filter(|v| ***v != *b).cloned().collect();
+
+                Ok(())
+            }
+            _ => Err(GraphErr::NoSuchVertex),
+        }
+    }
+
+    /// Returns a reference to the inner edges hash map.
+    fn edges_hm_ref(&self) -> Result<(&HashMap<Edge, f32>), GraphErr> {
+        Ok(&self.edges)
+    }
+
+    /// Returns a reference to the inner vertices hashmap.
+    fn vertex_hm_ref(&self) -> &HashMap<Arc<VertexId>, (T, Arc<VertexId>)> {
+        &self.vertices
     }
 }
 
