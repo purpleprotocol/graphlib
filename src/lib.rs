@@ -4,7 +4,7 @@
 #![cfg_attr(feature = "no_std", no_std)]
 
 //! # Graphlib
-//! Graphlib is a simple and powerful rust library for the graph data-structure.
+//! Graphlib is a simple and powerful Rust graph library.
 //!
 //! ---
 //!
