@@ -7,12 +7,17 @@ use rand_core::RngCore;
 use rand_isaac::IsaacRng;
 
 use core::sync::atomic::Ordering;
-
 use super::SEED;
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 /// Id of a vertex
 pub struct VertexId([u8; 16]); // 128bit
+
+impl core::fmt::Debug for VertexId {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "VertexId({})", hex::encode(self.0))
+    }
+}
 
 impl VertexId {
     pub fn random() -> VertexId {
