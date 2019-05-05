@@ -974,15 +974,6 @@ impl<T> Graph<T> {
         Bfs::new(self)
     }
 
-    /// Attempts to fetch a reference to a stored vertex id
-    /// which is equal to the given `VertexId`.
-    pub(crate) fn fetch_id_ref<'b>(&'b self, id: &VertexId) -> Option<&'b VertexId> {
-        match self.vertices.get(id) {
-            Some((_, id_ptr)) => Some(id_ptr.as_ref()),
-            None => None,
-        }
-    }
-
     /// Creates a file with the dot representation of the graph.
     /// This method requires the `dot` feature.
     ///
@@ -1024,14 +1015,14 @@ impl<T> Graph<T> {
     }
 
     fn do_add_edge(&mut self, a: &VertexId, b: &VertexId, weight: f32) -> Result<(), GraphErr> {
-        let id_ptr1 = if let Some((_, a_prime)) = self.vertices.get(a) {
-            a_prime.clone()
+        let id_ptr1 = if self.vertices.get(a).is_some() {
+            a.clone()
         } else {
             return Err(GraphErr::NoSuchVertex);
         };
 
-        let id_ptr2 = if let Some((_, b_prime)) = self.vertices.get(b) {
-            b_prime.clone()
+        let id_ptr2 = if self.vertices.get(b).is_some() {
+            b.clone()
         } else {
             return Err(GraphErr::NoSuchVertex);
         };
@@ -1111,6 +1102,15 @@ impl<T> Graph<T> {
                 }
             }
         });
+    }
+
+    /// Attempts to fetch a reference to a stored vertex id
+    /// which is equal to the given `VertexId`.
+    pub(crate) fn fetch_id_ref<'b>(&'b self, id: &VertexId) -> Option<&'b VertexId> {
+        match self.vertices.get(id) {
+            Some((_, id_ptr)) => Some(id_ptr.as_ref()),
+            None => None,
+        }
     }
 
     /// Returns a reference to the inner edges hash map.
