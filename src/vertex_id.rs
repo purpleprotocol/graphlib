@@ -19,6 +19,12 @@ impl core::fmt::Debug for VertexId {
     }
 }
 
+impl core::convert::AsRef<VertexId> for VertexId {
+    fn as_ref(&self) -> &VertexId {
+        &self
+    }
+}
+
 impl VertexId {
     pub fn random() -> VertexId {
         /*

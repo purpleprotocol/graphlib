@@ -6,13 +6,11 @@ use crate::vertex_id::VertexId;
 use hashbrown::HashSet;
 #[cfg(not(feature = "no_std"))]
 use std::collections::VecDeque;
-#[cfg(not(feature = "no_std"))]
-use std::sync::Arc;
 
 #[cfg(feature = "no_std")]
 extern crate alloc;
 #[cfg(feature = "no_std")]
-use alloc::{collections::vec_deque::VecDeque, sync::Arc};
+use alloc::{collections::vec_deque::VecDeque};
 
 #[cfg(feature = "no_std")]
 use alloc::vec::Vec;
@@ -20,10 +18,10 @@ use alloc::vec::Vec;
 #[derive(Debug)]
 /// Breadth-First Iterator
 pub struct Bfs<'a, T> {
-    queue: VecDeque<Arc<VertexId>>,
-    current_ptr: Option<Arc<VertexId>>,
-    visited_set: HashSet<Arc<VertexId>>,
-    roots_stack: Vec<Arc<VertexId>>,
+    queue: VecDeque<VertexId>,
+    current_ptr: Option<VertexId>,
+    visited_set: HashSet<VertexId>,
+    roots_stack: Vec<VertexId>,
     iterable: &'a Graph<T>,
 }
 
@@ -32,7 +30,7 @@ impl<'a, T> Bfs<'a, T> {
         let mut roots_stack = Vec::with_capacity(graph.roots_count());
 
         for v in graph.roots() {
-            roots_stack.push(Arc::from(*v));
+            roots_stack.push(v.clone());
         }
 
         let current_ptr = roots_stack.pop();
@@ -66,8 +64,8 @@ impl<'a, T> Iterator for Bfs<'a, T> {
                 // and check their visited status.
                 for n in self.iterable.out_neighbors(current_ptr.as_ref()) {
                     if !self.visited_set.contains(n) {
-                        self.visited_set.insert(Arc::from(*n));
-                        self.queue.push_back(Arc::from(*n));
+                        self.visited_set.insert(n.clone());
+                        self.queue.push_back(n.clone());
 
                         return self.iterable.fetch_id_ref(n);
                     }

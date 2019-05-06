@@ -4,24 +4,16 @@ use crate::edge::Edge;
 use crate::iterators::{Bfs, Dfs, VertexIter};
 use crate::vertex_id::VertexId;
 use hashbrown::{HashMap, HashSet};
-#[cfg(not(feature = "no_std"))]
-use std::sync::Arc;
 
 #[cfg(feature = "no_std")]
 use core::iter;
-#[cfg(feature = "no_std")]
-use core::cmp::Ordering;
 #[cfg(not(feature = "no_std"))]
 use std::iter;
-#[cfg(not(feature = "no_std"))]
-use std::cmp::Ordering;
 
 #[cfg(feature = "no_std")]
 extern crate alloc;
 #[cfg(feature = "no_std")]
 use alloc::boxed::Box;
-#[cfg(feature = "no_std")]
-use alloc::sync::Arc;
 #[cfg(feature = "no_std")]
 use alloc::vec;
 #[cfg(feature = "no_std")]
@@ -39,11 +31,11 @@ pub enum GraphErr {
 #[derive(Clone, Debug)]
 /// Graph data-structure
 pub struct Graph<T> {
-    vertices: HashMap<Arc<VertexId>, (T, Arc<VertexId>)>,
+    vertices: HashMap<VertexId, (T, VertexId)>,
     edges: HashMap<Edge, f32>,
-    roots: Vec<Arc<VertexId>>,
-    inbound_table: HashMap<Arc<VertexId>, Vec<Arc<VertexId>>>,
-    outbound_table: HashMap<Arc<VertexId>, Vec<Arc<VertexId>>>,
+    roots: Vec<VertexId>,
+    inbound_table: HashMap<VertexId, Vec<VertexId>>,
+    outbound_table: HashMap<VertexId, Vec<VertexId>>,
 }
 
 impl<T> Graph<T> {
@@ -187,10 +179,9 @@ impl<T> Graph<T> {
     /// ```
     pub fn add_vertex(&mut self, item: T) -> VertexId {
         let id = VertexId::random();
-        let id_ptr = Arc::new(id);
 
-        self.vertices.insert(id_ptr.clone(), (item, id_ptr.clone()));
-        self.roots.push(id_ptr);
+        self.vertices.insert(id.clone(), (item, id.clone()));
+        self.roots.push(id);
 
         id
     }
@@ -285,10 +276,7 @@ impl<T> Graph<T> {
             return None;
         }
 
-        let a = Arc::from(*a);
-        let b = Arc::from(*b);
-
-        if let Some(result) = self.edges.get(&Edge::new(a, b)) {
+        if let Some(result) = self.edges.get(&Edge::new(a.clone(), b.clone())) {
             Some(*result)
         } else {
             None
@@ -319,8 +307,8 @@ impl<T> Graph<T> {
     /// graph.set_weight(&v1, &v2, 0.123).unwrap();
     /// assert_eq!(graph.weight(&v1, &v2), Some(0.123));
     /// ```
-    pub fn set_weight(&mut self, a_ref: &VertexId, b_ref: &VertexId, new_weight: f32) -> Result<(), GraphErr> {
-        if !self.has_edge(a_ref, b_ref) {
+    pub fn set_weight(&mut self, a: &VertexId, b: &VertexId, new_weight: f32) -> Result<(), GraphErr> {
+        if !self.has_edge(a, b) {
             return Err(GraphErr::NoSuchEdge);
         }
 
@@ -328,18 +316,15 @@ impl<T> Graph<T> {
             return Err(GraphErr::InvalidWeight);
         }
 
-        let a = Arc::from(*a_ref);
-        let b = Arc::from(*b_ref);
-
-        self.edges.insert(Edge::new(a.clone(), b), new_weight);
+        self.edges.insert(Edge::new(a.clone(), b.clone()), new_weight);
         
         // Sort outbound vertices after setting a new weight
-        let mut outbounds = self.outbound_table.get(&a).unwrap().clone();
+        let mut outbounds = self.outbound_table.get(a).unwrap().clone();
 
         self.sort_outbounds(a.clone(), &mut outbounds);
         
         // Update outbounds
-        self.outbound_table.insert(a, outbounds);
+        self.outbound_table.insert(a.clone(), outbounds);
 
         Ok(())
     }
@@ -363,10 +348,8 @@ impl<T> Graph<T> {
     /// assert!(!graph.has_edge(&v2, &v3));
     /// ```
     pub fn has_edge(&self, a: &VertexId, b: &VertexId) -> bool {
-        let rc_other = Arc::from(*b);
-
         match self.outbound_table.get(a) {
-            Some(outbounds) => outbounds.contains(&rc_other),
+            Some(outbounds) => outbounds.contains(b),
             None => false,
         }
     }
@@ -496,7 +479,7 @@ impl<T> Graph<T> {
 
         self.outbound_table.remove(id);
         self.edges.retain(|e, _| !e.matches_any(id));
-        self.roots.retain(|r| r.as_ref() != id);
+        self.roots.retain(|r| r != id);
     }
 
     /// Removes the specified edge from the graph.
@@ -529,14 +512,14 @@ impl<T> Graph<T> {
         let mut remove = false;
 
         if let Some(outbounds) = self.outbound_table.get_mut(a) {
-            outbounds.retain(|v| *v.as_ref() != *b);
+            outbounds.retain(|v| v != b);
             remove = true;
         }
 
         // If outbound vertex doesn't have any more inbounds,
         // mark it as root.
         if self.in_neighbors_count(&b) == 0 {
-            self.roots.push(Arc::from(*b));
+            self.roots.push(b.clone());
         }
 
         if remove {
@@ -991,15 +974,6 @@ impl<T> Graph<T> {
         Bfs::new(self)
     }
 
-    /// Attempts to fetch a reference to a stored vertex id
-    /// which is equal to the given `VertexId`.
-    pub(crate) fn fetch_id_ref<'b>(&'b self, id: &VertexId) -> Option<&'b VertexId> {
-        match self.vertices.get(id) {
-            Some((_, id_ptr)) => Some(id_ptr.as_ref()),
-            None => None,
-        }
-    }
-
     /// Creates a file with the dot representation of the graph.
     /// This method requires the `dot` feature.
     ///
@@ -1041,14 +1015,14 @@ impl<T> Graph<T> {
     }
 
     fn do_add_edge(&mut self, a: &VertexId, b: &VertexId, weight: f32) -> Result<(), GraphErr> {
-        let id_ptr1 = if let Some((_, a_prime)) = self.vertices.get(a) {
-            a_prime.clone()
+        let id_ptr1 = if self.vertices.get(a).is_some() {
+            a.clone()
         } else {
             return Err(GraphErr::NoSuchVertex);
         };
 
-        let id_ptr2 = if let Some((_, b_prime)) = self.vertices.get(b) {
-            b_prime.clone()
+        let id_ptr2 = if self.vertices.get(b).is_some() {
+            b.clone()
         } else {
             return Err(GraphErr::NoSuchVertex);
         };
@@ -1085,13 +1059,13 @@ impl<T> Graph<T> {
         }
 
         // Remove outbound vertex from roots
-        self.roots = self.roots.iter().filter(|v| ***v != *b).cloned().collect();
+        self.roots = self.roots.iter().filter(|v| *v != b).cloned().collect();
 
         Ok(())
     }
 
-    fn sort_outbounds(&self, inbound: Arc<VertexId>, outbounds: &mut Vec<Arc<VertexId>>) {
-        let outbound_weights: HashMap<Arc<VertexId>, f32> = outbounds
+    fn sort_outbounds(&self, inbound: VertexId, outbounds: &mut Vec<VertexId>) {
+        let outbound_weights: HashMap<VertexId, f32> = outbounds
             .iter()
             .map(|id| (id.clone(), *self.edges.get(&Edge::new(inbound.clone(), id.clone())).unwrap()))
             .collect();
@@ -1130,13 +1104,22 @@ impl<T> Graph<T> {
         });
     }
 
+    /// Attempts to fetch a reference to a stored vertex id
+    /// which is equal to the given `VertexId`.
+    pub(crate) fn fetch_id_ref<'b>(&'b self, id: &VertexId) -> Option<&'b VertexId> {
+        match self.vertices.get(id) {
+            Some((_, id_ptr)) => Some(id_ptr.as_ref()),
+            None => None,
+        }
+    }
+
     /// Returns a reference to the inner edges hash map.
     fn edges_hm_ref(&self) -> Result<(&HashMap<Edge, f32>), GraphErr> {
         Ok(&self.edges)
     }
 
     /// Returns a reference to the inner vertices hashmap.
-    fn vertex_hm_ref(&self) -> &HashMap<Arc<VertexId>, (T, Arc<VertexId>)> {
+    fn vertex_hm_ref(&self) -> &HashMap<VertexId, (T, VertexId)> {
         &self.vertices
     }
 }
@@ -1178,40 +1161,40 @@ mod tests {
         assert_eq!(dfs.next(), Some(&v7));
     }
 
-    // #[test]
-    // fn dfs_mul_roots() {
-    //     let mut graph: Graph<usize> = Graph::new();
+    #[test]
+    fn dfs_mul_roots() {
+        let mut graph: Graph<usize> = Graph::new();
 
-    //     let v1 = graph.add_vertex(0);
-    //     let v2 = graph.add_vertex(1);
-    //     let v3 = graph.add_vertex(2);
-    //     let v4 = graph.add_vertex(3);
+        let v1 = graph.add_vertex(0);
+        let v2 = graph.add_vertex(1);
+        let v3 = graph.add_vertex(2);
+        let v4 = graph.add_vertex(3);
 
-    //     graph.add_edge(&v1, &v2).unwrap();
-    //     graph.add_edge(&v3, &v1).unwrap();
-    //     graph.add_edge(&v1, &v4).unwrap();
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v3, &v1).unwrap();
+        graph.add_edge(&v1, &v4).unwrap();
 
-    //     let v5 = graph.add_vertex(4);
-    //     let v6 = graph.add_vertex(5);
+        let v5 = graph.add_vertex(4);
+        let v6 = graph.add_vertex(5);
 
-    //     graph.add_edge(&v5, &v6).unwrap();
+        graph.add_edge(&v5, &v6).unwrap();
 
-    //     // Iterate over vertices
-    //     let mut dfs = graph.dfs();
+        // Iterate over vertices
+        let mut dfs = graph.dfs();
 
-    //     for _ in 0..2 {
-    //         let v = dfs.next();
+        for _ in 0..2 {
+            let v = dfs.next();
 
-    //         if v == Some(&v3) {
-    //             assert_eq!(dfs.next(), Some(&v1));
-    //             assert!(set![&v2, &v4] == (&mut dfs).take(2).collect());
-    //         } else if v == Some(&v5) {
-    //             assert_eq!(dfs.next(), Some(&v6));
-    //         } else {
-    //             panic!("Not a root node")
-    //         }
-    //     }
+            if v == Some(&v3) {
+                assert_eq!(dfs.next(), Some(&v1));
+                assert!(set![&v2, &v4] == (&mut dfs).take(2).collect());
+            } else if v == Some(&v5) {
+                assert_eq!(dfs.next(), Some(&v6));
+            } else {
+                panic!("Not a root node")
+            }
+        }
 
-    //     assert_eq!(dfs.count(), 0, "There were remaining nodes");
-    // }
+        assert_eq!(dfs.count(), 0, "There were remaining nodes");
+    }
 }

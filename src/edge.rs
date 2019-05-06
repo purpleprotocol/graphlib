@@ -5,21 +5,17 @@ use crate::vertex_id::VertexId;
 use std::hash::Hash;
 #[cfg(not(feature = "no_std"))]
 use std::hash::Hasher;
-#[cfg(not(feature = "no_std"))]
-use std::sync::Arc;
 
 #[cfg(feature = "no_std")]
 extern crate alloc;
-#[cfg(feature = "no_std")]
-use alloc::sync::Arc;
 #[cfg(feature = "no_std")]
 use core::hash::{Hash, Hasher};
 
 #[derive(Clone, Debug)]
 /// Edge internal struct
 pub struct Edge {
-    inbound: Arc<VertexId>,
-    outbound: Arc<VertexId>,
+    inbound: VertexId,
+    outbound: VertexId,
 }
 
 impl PartialEq for Edge {
@@ -38,7 +34,7 @@ impl Hash for Edge {
 }
 
 impl Edge {
-    pub fn new(outbound: Arc<VertexId>, inbound: Arc<VertexId>) -> Edge {
+    pub fn new(outbound: VertexId, inbound: VertexId) -> Edge {
         Edge {
             inbound,
             outbound,
@@ -48,13 +44,13 @@ impl Edge {
     /// Returns true if the given vertex ids are the
     /// inbound and outbound vertices of the edge.
     pub(crate) fn matches(&self, a: &VertexId, b: &VertexId) -> bool {
-        a == self.outbound.as_ref() && b == self.inbound.as_ref()
+        a == &self.outbound && b == &self.inbound
     }
 
     /// Returns true if either the inbound or outbound
     /// vertex is matching the given `VertexId`.
     pub(crate) fn matches_any(&self, id: &VertexId) -> bool {
-        id == self.inbound.as_ref() || id == self.outbound.as_ref()
+        id == &self.inbound || id == &self.outbound
     }
 
     /// Returns the inbound VertexId
