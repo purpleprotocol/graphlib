@@ -17,7 +17,7 @@ pub struct Topo<'a, T> {
     iterable: &'a Graph<T>,
     /// Processed vertices
     vertices: Vec<&'a VertexId>,
-    /// Working set of vertoces
+    /// Working set of vertices
     roots: Vec<&'a VertexId>,
     /// Working set of vertex edges
     vertex_edges: HashMap<&'a VertexId, usize>,
