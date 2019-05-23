@@ -983,6 +983,15 @@ impl<T> Graph<T> {
     /// use topo.is_cylic() == false to verify
     /// that your graph is a DAG.
     ///
+    /// If you attempt to use a topological
+    /// order without confirming that your graph
+    /// is a DAG, you may encounter a panic!().
+    ///
+    /// The panic!() will be encountered when
+    /// the iterator detects that there are no
+    /// more vertices to visit, but all vertices
+    /// have not been visited.
+    ///
     /// ## Example
     /// ```rust
     /// # #[macro_use] extern crate graphlib; fn main() {
