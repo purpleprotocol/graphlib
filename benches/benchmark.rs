@@ -33,8 +33,9 @@ fn bench_create(c: &mut Criterion) {
 // includes benches for :
 // 1. dfs(&self) -> Dfs<T>
 // 2. bfs(&self) -> Bfs<T>
-// 3. vertices(&self) -> VertexIter
-// 4. roots(&self) -> VertexIter
+// 3. topo(&self) -> Topo<T>
+// 4. vertices(&self) -> VertexIter
+// 5. roots(&self) -> VertexIter
 fn bench_iterators(c: &mut Criterion) {
     c.bench_function("dfs_10", |b| {
         let mut graph: Graph<usize> = Graph::new();
@@ -220,6 +221,100 @@ fn bench_iterators(c: &mut Criterion) {
 
         b.iter(|| {
             for v in graph.bfs() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("topo_10", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+        b.iter(|| {
+            for v in graph.topo() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("topo_100", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=100 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.topo() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("topo_500", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=500 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.topo() {
+                vertices.push(v);
+            }
+        })
+    });
+
+    c.bench_function("topo_1000", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=1000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.topo() {
+                vertices.push(v);
+            }
+        })
+    });
+    #[cfg(feature = "sbench")]
+    c.bench_function("topo_m", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        let mut vertices = vec![];
+
+        let mut v1 = graph.add_vertex(0);
+
+        for i in 1..=10_000_000 {
+            let v2 = graph.add_vertex(i);
+            graph.add_edge(&v1, &v2);
+            v1 = v2.clone();
+        }
+
+        b.iter(|| {
+            for v in graph.topo() {
                 vertices.push(v);
             }
         })

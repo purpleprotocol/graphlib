@@ -1,7 +1,7 @@
 // Copyright 2019 Octavian Oncescu
 
 use crate::edge::Edge;
-use crate::iterators::{Bfs, Dfs, VertexIter};
+use crate::iterators::{Bfs, Dfs, Topo, VertexIter};
 use crate::vertex_id::VertexId;
 use hashbrown::{HashMap, HashSet};
 
@@ -1037,6 +1037,52 @@ impl<T> Graph<T> {
     /// ```
     pub fn bfs(&self) -> Bfs<'_, T> {
         Bfs::new(self)
+    }
+
+    /// Returns an iterator over the vertices
+    /// of the graph which follows a DFS based
+    /// topological order (Kahn's algorithm).
+    ///
+    /// Topological sorting is not possible for
+    /// graphs which contain a cycle. You may
+    /// use topo.is_cylic() == false to verify
+    /// that your graph is a DAG.
+    ///
+    /// If you attempt to use a topological
+    /// order without confirming that your graph
+    /// is a DAG, you may encounter a panic!().
+    ///
+    /// The panic!() will be encountered when
+    /// the iterator detects that there are no
+    /// more vertices to visit, but all vertices
+    /// have not been visited.
+    ///
+    /// ## Example
+    /// ```rust
+    /// # #[macro_use] extern crate graphlib; fn main() {
+    /// use graphlib::Graph;
+    /// use std::collections::HashSet;
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    ///
+    /// let v1 = graph.add_vertex(1);
+    /// let v2 = graph.add_vertex(2);
+    /// let v3 = graph.add_vertex(3);
+    /// let v4 = graph.add_vertex(4);
+    ///
+    /// graph.add_edge(&v1, &v2).unwrap();
+    /// graph.add_edge(&v2, &v3).unwrap();
+    /// graph.add_edge(&v3, &v4).unwrap();
+    ///
+    /// let mut topo = graph.topo();
+    ///
+    /// assert_eq!(topo.next(), Some(&v1));
+    /// assert_eq!(topo.next(), Some(&v2));
+    /// assert!(set![&v3, &v4] == topo.collect());
+    /// # }
+    /// ```
+    pub fn topo(&self) -> Topo<'_, T> {
+        Topo::new(self)
     }
 
     /// Creates a file with the dot representation of the graph.
