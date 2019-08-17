@@ -33,7 +33,8 @@ pub enum GraphErr {
 pub struct Graph<T> {
     vertices: HashMap<VertexId, (T, VertexId)>,
     edges: HashMap<Edge, f32>,
-    roots: Vec<VertexId>,
+    roots: HashSet<VertexId>,
+    tips: HashSet<VertexId>,
     inbound_table: HashMap<VertexId, Vec<VertexId>>,
     outbound_table: HashMap<VertexId, Vec<VertexId>>,
 }
@@ -54,7 +55,8 @@ impl<T> Graph<T> {
         Graph {
             vertices: HashMap::new(),
             edges: HashMap::new(),
-            roots: Vec::new(),
+            roots: HashSet::new(),
+            tips: HashSet::new(),
             inbound_table: HashMap::new(),
             outbound_table: HashMap::new(),
         }
@@ -69,10 +71,17 @@ impl<T> Graph<T> {
     /// let mut graph: Graph<usize> = Graph::with_capacity(5);
     /// ```
     pub fn with_capacity(capacity: usize) -> Graph<T> {
+        let edges_capacity = if capacity < 100 {
+            usize::pow(capacity, 2)
+        } else {
+            capacity
+        };
+
         Graph {
             vertices: HashMap::with_capacity(capacity),
-            edges: HashMap::with_capacity(usize::pow(capacity, 2)),
-            roots: Vec::with_capacity(capacity),
+            edges: HashMap::with_capacity(edges_capacity),
+            roots: HashSet::with_capacity(capacity),
+            tips: HashSet::with_capacity(capacity),
             inbound_table: HashMap::with_capacity(capacity),
             outbound_table: HashMap::with_capacity(capacity),
         }
@@ -85,13 +94,14 @@ impl<T> Graph<T> {
     ///
     /// let mut graph: Graph<usize> = Graph::with_capacity(5);
     ///
-    /// assert_eq!(graph.capacity(), 5);
+    /// assert!(graph.capacity() >= 5);
     /// ```
     pub fn capacity(&self) -> usize {
         min!(
             self.vertices.capacity(),
             self.edges.capacity(),
             self.roots.capacity(),
+            self.tips.capacity(),
             self.inbound_table.capacity(),
             self.outbound_table.capacity()
         )
@@ -121,12 +131,17 @@ impl<T> Graph<T> {
         // number of vertices that are currently placed
         // in the graph.
         let new_capacity = self.vertices.len() + additional;
-        let edges_capacity = usize::pow(new_capacity, 2);
+        let edges_capacity = if new_capacity < 100 {
+            usize::pow(new_capacity, 2)
+        } else {
+            new_capacity
+        };
         let edges_count = self.edges.len();
         let edges_additional = edges_capacity - edges_count;
 
         self.edges.reserve(edges_additional);
         self.roots.reserve(additional);
+        self.tips.reserve(additional);
         self.vertices.reserve(additional);
         self.outbound_table.reserve(additional);
         self.inbound_table.reserve(additional);
@@ -142,14 +157,15 @@ impl<T> Graph<T> {
     ///
     /// let mut graph: Graph<usize> = Graph::with_capacity(5);
     ///
-    /// assert_eq!(graph.capacity(), 5);
+    /// assert!(graph.capacity() >= 5);
     ///
     /// graph.shrink_to_fit();
-    /// assert_eq!(graph.capacity(), 0);
+    /// assert!(graph.capacity() < 5);
     /// ```
     pub fn shrink_to_fit(&mut self) {
         self.edges.shrink_to_fit();
         self.roots.shrink_to_fit();
+        self.tips.shrink_to_fit();
         self.vertices.shrink_to_fit();
         self.outbound_table.shrink_to_fit();
         self.inbound_table.shrink_to_fit();
@@ -181,7 +197,8 @@ impl<T> Graph<T> {
         let id = VertexId::random();
 
         self.vertices.insert(id.clone(), (item, id.clone()));
-        self.roots.push(id);
+        self.roots.insert(id);
+        self.tips.insert(id);
 
         id
     }
@@ -468,18 +485,35 @@ impl<T> Graph<T> {
     /// ```
     pub fn remove(&mut self, id: &VertexId) {
         self.vertices.remove(id);
-        self.inbound_table.remove(id);
 
-        // Mark outbounds as roots if they have no inbounds.
-        for (n, _) in self.outbound_table.iter() {
-            if self.in_neighbors_count(n) == 0 {
-                self.roots.push(n.clone());
+        // Remove each inbound edge        
+        if let Some(inbounds) = self.inbound_table.remove(id) {
+            for vertex in inbounds {
+                self.remove_edge(&vertex, id);
+
+                // Add to tips if inbound vertex doesn't
+                // have other outbound vertices.
+                if self.out_neighbors_count(&vertex) == 0 {
+                    self.tips.insert(vertex);
+                }
             }
         }
 
-        self.outbound_table.remove(id);
-        self.edges.retain(|e, _| !e.matches_any(id));
-        self.roots.retain(|r| r != id);
+        // Remove each outbound edge
+        if let Some(outbounds) = self.outbound_table.remove(id) {
+            for vertex in outbounds {
+                self.remove_edge(id, &vertex);
+
+                // Add to roots if outbound vertex doesn't
+                // have other inbound vertices.
+                if self.in_neighbors_count(&vertex) == 0 {
+                    self.roots.insert(vertex);
+                }
+            }
+        }
+
+        self.roots.remove(&id);
+        self.tips.remove(&id);
     }
 
     /// Removes the specified edge from the graph.
@@ -509,22 +543,22 @@ impl<T> Graph<T> {
     /// assert_eq!(graph.edge_count(), 2);
     /// ```
     pub fn remove_edge(&mut self, a: &VertexId, b: &VertexId) {
-        let mut remove = false;
-
         if let Some(outbounds) = self.outbound_table.get_mut(a) {
             outbounds.retain(|v| v != b);
-            remove = true;
         }
 
         // If outbound vertex doesn't have any more inbounds,
         // mark it as root.
         if self.in_neighbors_count(&b) == 0 {
-            self.roots.push(b.clone());
+            self.roots.insert(b.clone());
         }
 
-        if remove {
-            self.edges.retain(|e, _| !e.matches(a, b));
+        // Mark vertex as tip if it doesn't have any more outbounds.
+        if self.out_neighbors_count(&a) == 0 {
+            self.tips.insert(a.clone());
         }
+
+        self.edges.remove(&Edge::new(a.clone(), b.clone()));
     }
 
     /// Iterates through the graph and only keeps
@@ -547,14 +581,12 @@ impl<T> Graph<T> {
     /// assert_eq!(graph.vertex_count(), 2);
     /// ```
     pub fn retain(&mut self, fun: impl Fn(&T) -> bool) {
-        let vertices: Vec<VertexId> = self.vertices().cloned().collect();
-        let vertices: Vec<VertexId> = vertices
-            .iter()
+        let vertices: Vec<VertexId> = self.vertices()
             .filter(|v| !fun(self.fetch(v).unwrap()))
             .cloned()
             .collect();
-
-        vertices.iter().for_each(|v| self.remove(v));
+        
+        vertices.iter().for_each(|v| self.remove(&v));
     }
 
     /// Performs a fold over the vertices that are
@@ -879,6 +911,39 @@ impl<T> Graph<T> {
         VertexIter(Box::new(self.roots.iter().map(AsRef::as_ref)))
     }
 
+    /// Returns an iterator over the tips of the graph. These
+    /// are all the vertices that have an inbound edge but no
+    /// outbound edge.
+    /// 
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    /// let mut tips = vec![];
+    ///
+    /// let v1 = graph.add_vertex(0);
+    /// let v2 = graph.add_vertex(1);
+    /// let v3 = graph.add_vertex(2);
+    /// let v4 = graph.add_vertex(3);
+    ///
+    /// graph.add_edge(&v1, &v2).unwrap();
+    /// graph.add_edge(&v3, &v1).unwrap();
+    /// graph.add_edge(&v1, &v4).unwrap();
+    ///
+    /// // Iterate over tips
+    /// for v in graph.tips() {
+    ///     tips.push(v);
+    /// }
+    ///
+    /// assert_eq!(tips.len(), 2);
+    /// assert_eq!(tips[0], &v2);
+    /// assert_eq!(tips[1], &v4);
+    /// ```
+    pub fn tips(&self) -> VertexIter<'_> {
+        VertexIter(Box::new(self.tips.iter().map(AsRef::as_ref)))
+    }
+
     /// Returns an iterator over all of the
     /// vertices that are placed in the graph.
     ///
@@ -1059,7 +1124,10 @@ impl<T> Graph<T> {
         }
 
         // Remove outbound vertex from roots
-        self.roots = self.roots.iter().filter(|v| *v != b).cloned().collect();
+        self.roots.remove(&b);
+
+        // Remove inbound vertex from tips
+        self.tips.remove(&a);
 
         Ok(())
     }
