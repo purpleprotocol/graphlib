@@ -616,6 +616,48 @@ impl<T> Graph<T> {
         acc
     }
 
+    /// Performs a map over all of the vertices of the graph,
+    /// applying the given transformation function to each one.
+    /// 
+    /// Returns a new graph with the same edges but with transformed
+    /// vertices.
+    /// ## Example
+    /// ```rust
+    /// use graphlib::Graph;
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    /// let id1 = graph.add_vertex(1);
+    /// let id2 = graph.add_vertex(2);
+    /// 
+    /// graph.add_edge(&id1, &id2);
+    /// 
+    /// // Map each vertex
+    /// let mapped: Graph<usize> = graph.map(|v| v + 2);
+    /// 
+    /// assert!(graph.has_edge(&id1, &id2));
+    /// assert!(mapped.has_edge(&id1, &id2));
+    /// assert_eq!(graph.fetch(&id1).unwrap(), &1);
+    /// assert_eq!(graph.fetch(&id2).unwrap(), &2);
+    /// assert_eq!(mapped.fetch(&id1).unwrap(), &3);
+    /// assert_eq!(mapped.fetch(&id2).unwrap(), &4);
+    /// ```
+    pub fn map<R>(&self, fun: impl Fn(&T) -> R) -> Graph<R> {
+        let mut graph: Graph<R> = Graph::new();
+        
+        // Copy edge and vertex information
+        graph.edges = self.edges.clone();
+        graph.roots = self.roots.clone();
+        graph.tips = self.tips.clone();
+        graph.inbound_table = self.inbound_table.clone();
+        graph.outbound_table = self.outbound_table.clone();
+        graph.vertices = self.vertices
+            .iter()
+            .map(|(id, (v, i))| (id.clone(), (fun(v), i.clone())))
+            .collect();
+
+        graph
+    }
+
     /// Returns true if the graph has cycles.
     ///
     /// ```rust
