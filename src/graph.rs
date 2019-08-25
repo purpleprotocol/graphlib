@@ -11,6 +11,18 @@ use core::iter;
 use std::iter;
 
 #[cfg(feature = "no_std")]
+use core::fmt::Debug;
+
+#[cfg(not(feature = "no_std"))]
+use std::fmt::Debug;
+
+#[cfg(feature = "no_std")]
+use core::cell::RefCell;
+
+#[cfg(not(feature = "no_std"))]
+use std::cell::RefCell;
+
+#[cfg(feature = "no_std")]
 extern crate alloc;
 #[cfg(feature = "no_std")]
 use alloc::boxed::Box;
@@ -19,27 +31,70 @@ use alloc::vec;
 #[cfg(feature = "no_std")]
 use alloc::vec::Vec;
 
+#[cfg(feature = "dot")]
+use super::SEED;
+
 #[derive(Clone, Debug, PartialEq)]
 /// Graph operation error
 pub enum GraphErr {
+    /// There is no vertex with the given id in the graph
     NoSuchVertex,
+
+    /// There is no such edge in the graph
     NoSuchEdge,
+
+    /// Could not add an edge to the graph
     CannotAddEdge,
-    InvalidWeight
+
+    /// The given weight is invalid
+    InvalidWeight,
+
+    #[cfg(feature = "dot")]
+    /// Could not render .dot file
+    CouldNotRender,
+
+    #[cfg(feature = "dot")]
+    /// The name of the graph is invalid. Check [this](https://docs.rs/dot/0.1.1/dot/struct.Id.html#method.new)
+    /// out for more information.
+    InvalidGraphName,
+
+    #[cfg(feature = "dot")]
+    /// The name of the given label is invalid. Check [this](https://docs.rs/dot/0.1.1/dot/struct.Id.html#method.new)
+    /// out for more information.
+    InvalidLabel,
 }
 
 #[derive(Clone, Debug)]
 /// Graph data-structure
-pub struct Graph<T> {
+pub struct Graph<T> 
+    where T: Clone + Debug
+{
+    /// Mapping of vertex ids and vertex values
     vertices: HashMap<VertexId, (T, VertexId)>,
+
+    /// Mapping between edges and weights
     edges: HashMap<Edge, f32>,
+
+    /// Set containing the roots of the graph
     roots: HashSet<VertexId>,
+
+    /// Set containing the tips of the graph
     tips: HashSet<VertexId>,
+
+    /// Mapping between vertex ids and inbound edges
     inbound_table: HashMap<VertexId, Vec<VertexId>>,
+
+    /// Mapping between vertex ids and outbound edges
     outbound_table: HashMap<VertexId, Vec<VertexId>>,
+
+    #[cfg(feature = "dot")]
+    /// Mapping between vertices and labels
+    labels: RefCell<HashMap<VertexId, String>>,
 }
 
-impl<T> Graph<T> {
+impl<T> Graph<T> 
+    where T: Clone + Debug
+{
     /// Creates a new graph.
     ///
     /// ## Example
@@ -59,6 +114,9 @@ impl<T> Graph<T> {
             tips: HashSet::new(),
             inbound_table: HashMap::new(),
             outbound_table: HashMap::new(),
+
+            #[cfg(feature = "dot")]
+            labels: RefCell::new(HashMap::new()),
         }
     }
 
@@ -84,6 +142,9 @@ impl<T> Graph<T> {
             tips: HashSet::with_capacity(capacity),
             inbound_table: HashMap::with_capacity(capacity),
             outbound_table: HashMap::with_capacity(capacity),
+
+            #[cfg(feature = "dot")]
+            labels: RefCell::new(HashMap::with_capacity(capacity)),
         }
     }
 
@@ -145,6 +206,9 @@ impl<T> Graph<T> {
         self.vertices.reserve(additional);
         self.outbound_table.reserve(additional);
         self.inbound_table.reserve(additional);
+
+        #[cfg(feature = "dot")]
+        self.labels.borrow_mut().reserve(additional);
     }
 
     /// Shrinks the capacity of the graph as much as possible.
@@ -169,6 +233,9 @@ impl<T> Graph<T> {
         self.vertices.shrink_to_fit();
         self.outbound_table.shrink_to_fit();
         self.inbound_table.shrink_to_fit();
+
+        #[cfg(feature = "dot")]
+        self.labels.borrow_mut().shrink_to_fit();
 
         // Calculate additional value for edges vector
         // such that it is always n^2 where n is the
@@ -196,7 +263,7 @@ impl<T> Graph<T> {
     pub fn add_vertex(&mut self, item: T) -> VertexId {
         let id = VertexId::random();
 
-        self.vertices.insert(id.clone(), (item, id.clone()));
+        self.vertices.insert(id, (item, id));
         self.roots.insert(id);
         self.tips.insert(id);
 
@@ -641,7 +708,7 @@ impl<T> Graph<T> {
     /// assert_eq!(mapped.fetch(&id1).unwrap(), &3);
     /// assert_eq!(mapped.fetch(&id2).unwrap(), &4);
     /// ```
-    pub fn map<R>(&self, fun: impl Fn(&T) -> R) -> Graph<R> {
+    pub fn map<R: Clone + Debug>(&self, fun: impl Fn(&T) -> R) -> Graph<R> {
         let mut graph: Graph<R> = Graph::new();
         
         // Copy edge and vertex information
@@ -654,6 +721,11 @@ impl<T> Graph<T> {
             .iter()
             .map(|(id, (v, i))| (id.clone(), (fun(v), i.clone())))
             .collect();
+
+        #[cfg(feature = "dot")]
+        {
+            graph.labels = self.labels.clone();
+        }
 
         graph
     }
@@ -1127,6 +1199,7 @@ impl<T> Graph<T> {
         Topo::new(self)
     }
 
+    #[cfg(feature = "dot")]
     /// Creates a file with the dot representation of the graph.
     /// This method requires the `dot` feature.
     ///
@@ -1152,19 +1225,85 @@ impl<T> Graph<T> {
     ///  graph.add_edge(&v1, &v4).unwrap();
     ///  graph.add_edge(&v5, &v6).unwrap();
     ///
-    ///  Graph::<String>::to_dot(&graph, &mut f);
+    ///  assert!(graph.to_dot("example1", &mut f).is_ok());
     /// ```
-    #[cfg(feature = "dot")]
-    pub fn to_dot(graph: &Graph<impl ::std::fmt::Display + Clone + Ord>, output: &mut impl ::std::io::Write) {
-        let vertices = graph.vertex_hm_ref();
-        let edges : Vec<(_, _)> = graph.edges_hm_ref().unwrap().iter().map(|(w, _)| {
+    pub fn to_dot(&self, graph_name: &str, output: &mut impl ::std::io::Write) -> Result<(), GraphErr> {
+        let edges : Vec<(_, _)> = self.edges.iter().map(|(w, _)| {
             let inbound = w.inbound();
             let outbound = w.outbound();
 
-            (vertices.get(inbound).unwrap().0.clone(), vertices.get(outbound).unwrap().0.clone())
+            (self.label(inbound).unwrap(), self.label(outbound).unwrap())
         }).collect();
 
-        dot::render(&crate::dot::Edges(edges), output).unwrap()
+        let edges = crate::dot::Edges::new(edges, graph_name)?;
+        dot::render(&edges, output).map_err(|_| GraphErr::CouldNotRender)
+    }
+
+    #[cfg(feature = "dot")]
+    /// Labels the vertex with the given id. Returns the old label if successful.
+    /// 
+    /// ## Example
+    /// ```rust
+    /// use graphlib::{Graph, VertexId};
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    /// let random_id = VertexId::random();
+    ///
+    /// let v1 = graph.add_vertex(0);
+    /// let v2 = graph.add_vertex(1);
+    /// let v3 = graph.add_vertex(2);
+    /// 
+    /// assert!(graph.label_vertex(&v1, "V1").is_ok());
+    /// assert!(graph.label_vertex(&v2, "V2").is_ok());
+    /// assert!(graph.label_vertex(&v3, "V3").is_ok());
+    /// assert!(graph.label_vertex(&random_id, "will fail").is_err());
+    /// ```
+    pub fn label_vertex(&mut self, vertex_id: &VertexId, label: &str) -> Result<String, GraphErr> {
+        // Check label validity
+        let _ = dot::Id::new(label.to_owned()).map_err(|_| GraphErr::InvalidLabel)?;
+
+        if self.vertices.get(vertex_id).is_none() {
+            return Err(GraphErr::NoSuchVertex);
+        }
+
+        let old_label = self.label(vertex_id).unwrap();
+        self.labels.borrow_mut().insert(vertex_id.clone(), label.to_owned());
+        
+        Ok(old_label)
+    }
+
+    #[cfg(feature = "dot")]
+    /// Retrieves the label of the vertex with the given id.
+    /// 
+    /// This function will return a default label if no label is set. Returns
+    /// `None` if there is no vertex associated with the given id in the graph.
+    pub fn label(&self, vertex_id: &VertexId) -> Option<String> {
+        if self.vertices.get(vertex_id).is_none() {
+            return None;
+        }
+        
+        if let Some(label) = self.labels.borrow().get(vertex_id) {
+            return Some(label.clone());
+        }
+
+        let bytes = super::gen_bytes();
+        
+        // Take only 8 bytes out of 16
+        let to_encode: Vec<u8> = bytes
+            .iter()
+            .take(8)
+            .cloned()
+            .collect();
+            
+        let encoded = hex::encode(&to_encode);
+        let label = format!("N_{}", encoded);
+        assert!(dot::Id::new(label.to_owned()).is_ok());
+
+        {
+            self.labels.borrow_mut().insert(vertex_id.clone(), label);
+        }
+        
+        self.labels.borrow().get(vertex_id).map(|s| s.clone())
     }
 
     fn do_add_edge(&mut self, a: &VertexId, b: &VertexId, weight: f32) -> Result<(), GraphErr> {
@@ -1267,16 +1406,6 @@ impl<T> Graph<T> {
             Some((_, id_ptr)) => Some(id_ptr.as_ref()),
             None => None,
         }
-    }
-
-    /// Returns a reference to the inner edges hash map.
-    fn edges_hm_ref(&self) -> Result<(&HashMap<Edge, f32>), GraphErr> {
-        Ok(&self.edges)
-    }
-
-    /// Returns a reference to the inner vertices hashmap.
-    fn vertex_hm_ref(&self) -> &HashMap<VertexId, (T, VertexId)> {
-        &self.vertices
     }
 }
 

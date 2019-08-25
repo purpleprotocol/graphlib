@@ -15,9 +15,17 @@ extern crate alloc;
 #[cfg(feature = "no_std")]
 use alloc::vec::Vec;
 
+#[cfg(feature = "no_std")]
+use core::fmt::Debug;
+
+#[cfg(not(feature = "no_std"))]
+use std::fmt::Debug;
+
 #[derive(Debug)]
 /// Depth-First Iterator
-pub struct Dfs<'a, T> {
+pub struct Dfs<'a, T> 
+    where T: Clone + Debug
+{
     /// All the vertices to be checked with the roots coming first.
     unchecked: Peekable<Cloned<Chain<VertexIter<'a>, VertexIter<'a>>>>,
     /// All black vertices.
@@ -32,7 +40,9 @@ pub struct Dfs<'a, T> {
     cached_cyclic: bool,
 }
 
-impl<'a, T> Dfs<'a, T> {
+impl<'a, T> Dfs<'a, T> 
+    where T: Clone + Debug
+{
     pub fn new(graph: &'a Graph<T>) -> Dfs<'_, T> {
         let unchecked = graph.roots().chain(graph.vertices()).cloned().peekable();
 
@@ -117,7 +127,9 @@ impl<'a, T> Dfs<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for Dfs<'a, T> {
+impl<'a, T> Iterator for Dfs<'a, T>
+    where T: Clone + Debug
+{
     type Item = &'a VertexId;
 
     fn size_hint(&self) -> (usize, Option<usize>) {

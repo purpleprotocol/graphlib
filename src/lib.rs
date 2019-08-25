@@ -54,3 +54,22 @@ pub use graph::*;
 pub use vertex_id::*;
 
 static SEED: AtomicUsize = AtomicUsize::new(0);
+
+use rand;
+use rand::Rng;
+use rand::SeedableRng;
+use rand_core::RngCore;
+use rand_isaac::IsaacRng;
+
+use core::sync::atomic::Ordering;
+
+pub(crate) fn gen_bytes() -> [u8; 16] {
+    let bytes = IsaacRng::gen::<[u8; 16]>(&mut IsaacRng::seed_from_u64(IsaacRng::next_u64(
+        &mut IsaacRng::seed_from_u64(SEED.load(Ordering::Relaxed) as u64),
+    )));
+
+    // change global variable to create new random the next time
+    SEED.fetch_add(1, Ordering::Relaxed);
+
+    bytes
+}

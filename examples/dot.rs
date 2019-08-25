@@ -21,5 +21,5 @@ pub fn main() {
     graph.add_edge(&v5, &v6).unwrap();
 
     #[cfg(feature = "dot")]
-    Graph::<String>::to_dot(&graph, &mut f);
+    graph.to_dot("example1", &mut f);
 }

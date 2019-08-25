@@ -15,9 +15,17 @@ use alloc::{collections::vec_deque::VecDeque};
 #[cfg(feature = "no_std")]
 use alloc::vec::Vec;
 
+#[cfg(feature = "no_std")]
+use core::fmt::Debug;
+
+#[cfg(not(feature = "no_std"))]
+use std::fmt::Debug;
+
 #[derive(Debug)]
 /// Breadth-First Iterator
-pub struct Bfs<'a, T> {
+pub struct Bfs<'a, T> 
+    where T: Clone + Debug
+{
     queue: VecDeque<VertexId>,
     current_ptr: Option<VertexId>,
     visited_set: HashSet<VertexId>,
@@ -25,7 +33,9 @@ pub struct Bfs<'a, T> {
     iterable: &'a Graph<T>,
 }
 
-impl<'a, T> Bfs<'a, T> {
+impl<'a, T> Bfs<'a, T> 
+    where T: Clone + Debug
+{
     pub fn new(graph: &'a Graph<T>) -> Bfs<'_, T> {
         let mut roots_stack = Vec::with_capacity(graph.roots_count());
 
@@ -45,7 +55,9 @@ impl<'a, T> Bfs<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for Bfs<'a, T> {
+impl<'a, T> Iterator for Bfs<'a, T> 
+    where T: Clone + Debug
+{
     type Item = &'a VertexId;
 
     fn next(&mut self) -> Option<Self::Item> {

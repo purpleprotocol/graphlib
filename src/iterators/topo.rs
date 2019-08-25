@@ -10,11 +10,19 @@ extern crate alloc;
 #[cfg(feature = "no_std")]
 use alloc::vec::Vec;
 
+#[cfg(feature = "no_std")]
+use core::fmt::Debug;
+
+#[cfg(not(feature = "no_std"))]
+use std::fmt::Debug;
+
 const PANIC_MSG: &str = "graph contains cycle(s)";
 
 #[derive(Debug)]
 /// Topological Iterator
-pub struct Topo<'a, T> {
+pub struct Topo<'a, T> 
+    where T: Clone + Debug
+{
     /// The Graph being iterated.
     iterable: &'a Graph<T>,
     /// Processed vertices
@@ -25,7 +33,9 @@ pub struct Topo<'a, T> {
     vertex_edges: HashMap<&'a VertexId, usize>,
 }
 
-impl<'a, T> Topo<'a, T> {
+impl<'a, T> Topo<'a, T> 
+    where T: Clone + Debug
+{
     pub fn new(graph: &'a Graph<T>) -> Topo<'_, T> {
         let mut roots = vec![];
         for node in graph.roots() {
@@ -89,7 +99,9 @@ impl<'a, T> Topo<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for Topo<'a, T> {
+impl<'a, T> Iterator for Topo<'a, T> 
+    where T: Clone + Debug
+{
     type Item = &'a VertexId;
 
     fn size_hint(&self) -> (usize, Option<usize>) {

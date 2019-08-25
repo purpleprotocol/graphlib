@@ -1,47 +1,74 @@
+use crate::graph::Graph;
+use crate::graph::GraphErr;
+
+#[cfg(feature = "no_std")]
+use core::io::Write;
+
+#[cfg(not(feature = "no_std"))]
 use std::io::Write;
+
+#[cfg(feature = "no_std")]
+use core::borrow::Cow;
+
+#[cfg(not(feature = "no_std"))]
 use std::borrow::Cow;
 
-use crate::graph::Graph;
-use std::fmt::Display;
+#[cfg(feature = "no_std")]
+use core::fmt::Debug;
+
+#[cfg(not(feature = "no_std"))]
+use std::fmt::Debug;
 
 /*
    Bounds on types throw warnings
-   type Nd<D: Display + Clone + Ord> = D;
-   type Ed<D: Display + Clone + Ord> = (D, D);
+   type Nd<D: Clone + Debug> = D;
+   type Ed<D: Clone + Debug> = (D, D);
    */
-type Nd<D> = D;
-type Ed<D> = (D, D);
+type Nd = String;
+type Ed = (String, String);
 
-pub(crate) struct Edges<D: Display + Clone>(pub(crate) Vec<Ed<D>>);
+pub(crate) struct Edges<'a> {
+    pub(crate) edges: Vec<Ed>,
+    pub(crate) graph_name: dot::Id<'a>,
+}
 
-impl<'a, D: Display + Clone + Ord> dot::Labeller<'a, Nd<D>, Ed<D>> for Edges<D> {
-    //TODO make it possible to rename Id
-    fn graph_id(&'a self) -> dot::Id<'a> { dot::Id::new("example1").unwrap() }
+impl<'a> Edges<'a> {
+    pub fn new(edges: Vec<Ed>, graph_name: &'a str) -> Result<Edges<'a>, GraphErr> {
+        let graph_name = dot::Id::new(graph_name).map_err(|_| GraphErr::InvalidGraphName)?;
 
-    fn node_id(&'a self, n: &Nd<D>) -> dot::Id<'a> {
-        dot::Id::new(format!("{}", *n)).unwrap()
+        Ok(Edges {
+            edges,
+            graph_name,
+        })
     }
 }
 
-impl <'a, D: Display + Clone + Ord> dot::GraphWalk<'a, Nd<D>, Ed<D>> for Edges<D> {
-    fn nodes(&self) -> dot::Nodes<'a, Nd<D>> {
-        let &Edges(ref v) = self;
+impl<'a> dot::Labeller<'a, Nd, Ed> for Edges<'a> {
+    fn graph_id(&'a self) -> dot::Id { dot::Id::new(self.graph_name.as_slice()).unwrap() }
+
+    fn node_id(&'a self, n: &Nd) -> dot::Id {
+        dot::Id::new(n.clone()).unwrap()
+    }
+}
+
+impl<'a> dot::GraphWalk<'a, Nd, Ed> for Edges<'a> {
+    fn nodes(&self) -> dot::Nodes<'a, Nd> {
+        let &Edges { edges: ref v, .. } = self;
         let mut nodes = Vec::with_capacity(v.len());
 
         for (s, t) in v.iter() {
-            nodes.push(s.clone()); nodes.push(t.clone());
+            nodes.push(s.clone()); 
+            nodes.push(t.clone());
         }
 
-        nodes.sort();
-        nodes.dedup();
         Cow::Owned(nodes)
     }
 
-    fn edges(&'a self) -> dot::Edges<'a,Ed<D>> {
-        let &Edges(ref edges) = self;
+    fn edges(&'a self) -> dot::Edges<'a, Ed> {
+        let &Edges { edges: ref edges, .. } = self;
         Cow::Borrowed(&edges[..])
     }
 
-    fn source(&self, e: &Ed<D>) -> Nd<D> { e.0.clone() }
-    fn target(&self, e: &Ed<D>) -> Nd<D> { e.1.clone() }
+    fn source(&self, e: &Ed) -> Nd { e.0.clone() }
+    fn target(&self, e: &Ed) -> Nd { e.1.clone() }
 }
