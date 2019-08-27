@@ -1297,7 +1297,7 @@ impl<T> Graph<T>
             
         let encoded = hex::encode(&to_encode);
         let label = format!("N_{}", encoded);
-        assert!(dot::Id::new(label.to_owned()).is_ok());
+        debug_assert!(dot::Id::new(label.to_owned()).is_ok());
 
         unsafe {
             let labels_ptr = mem::transmute::<&HashMap<VertexId, String>, &mut HashMap<VertexId, String>>(&self.labels);
@@ -1305,6 +1305,56 @@ impl<T> Graph<T>
         }
         
         self.labels.get(vertex_id).map(|s| s.clone())
+    }
+
+    #[cfg(feature = "dot")]
+    /// Maps each label that is placed on a vertex to a new label.
+    /// 
+    /// ```rust
+    /// use std::collections::HashMap;
+    /// use graphlib::{Graph, VertexId};
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    /// let random_id = VertexId::random();
+    /// let mut vertex_id: usize = 1;
+    ///
+    /// let v1 = graph.add_vertex(0);
+    /// let v2 = graph.add_vertex(1);
+    /// let v3 = graph.add_vertex(2);
+    /// 
+    /// assert!(graph.label_vertex(&v1, &format!("V{}", vertex_id)).is_ok());
+    /// vertex_id += 1;
+    /// 
+    /// assert!(graph.label_vertex(&v2, &format!("V{}", vertex_id)).is_ok());
+    /// vertex_id += 1;
+    /// 
+    /// assert!(graph.label_vertex(&v3, &format!("V{}", vertex_id)).is_ok());
+    /// 
+    /// assert_eq!(graph.label(&v1).unwrap(), "V1");
+    /// assert_eq!(graph.label(&v2).unwrap(), "V2");
+    /// assert_eq!(graph.label(&v3).unwrap(), "V3");
+    /// 
+    /// let new_labels: HashMap<VertexId, String> = vec![v1.clone(), v2.clone(), v3.clone()]
+    ///     .iter()
+    ///     .map(|id| {
+    ///         vertex_id += 1;
+    ///         let label = format!("V{}", vertex_id);
+    /// 
+    ///         (id.clone(), label)
+    ///     })
+    ///     .collect();
+    /// 
+    /// graph.map_labels(|id, _old_label| new_labels.get(id).unwrap().clone());
+    /// 
+    /// assert_eq!(graph.label(&v1).unwrap(), "V4");
+    /// assert_eq!(graph.label(&v2).unwrap(), "V5");
+    /// assert_eq!(graph.label(&v3).unwrap(), "V6");
+    /// ```
+    pub fn map_labels(&mut self, mut fun: impl FnMut(&VertexId, &str) -> String) {
+        for (id, l) in self.labels.iter_mut() {
+            let new_label = fun(id, l);
+            *l = new_label;
+        }
     }
 
     fn do_add_edge(&mut self, a: &VertexId, b: &VertexId, weight: f32) -> Result<(), GraphErr> {
