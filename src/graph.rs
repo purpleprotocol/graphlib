@@ -17,10 +17,10 @@ use core::fmt::Debug;
 use std::fmt::Debug;
 
 #[cfg(feature = "no_std")]
-use core::cell::RefCell;
+use core::mem;
 
 #[cfg(not(feature = "no_std"))]
-use std::cell::RefCell;
+use std::mem;
 
 #[cfg(feature = "no_std")]
 extern crate alloc;
@@ -89,7 +89,7 @@ pub struct Graph<T>
 
     #[cfg(feature = "dot")]
     /// Mapping between vertices and labels
-    labels: RefCell<HashMap<VertexId, String>>,
+    labels: HashMap<VertexId, String>,
 }
 
 impl<T> Graph<T> 
@@ -116,7 +116,7 @@ impl<T> Graph<T>
             outbound_table: HashMap::new(),
 
             #[cfg(feature = "dot")]
-            labels: RefCell::new(HashMap::new()),
+            labels: HashMap::new(),
         }
     }
 
@@ -144,7 +144,7 @@ impl<T> Graph<T>
             outbound_table: HashMap::with_capacity(capacity),
 
             #[cfg(feature = "dot")]
-            labels: RefCell::new(HashMap::with_capacity(capacity)),
+            labels: HashMap::with_capacity(capacity),
         }
     }
 
@@ -208,7 +208,7 @@ impl<T> Graph<T>
         self.inbound_table.reserve(additional);
 
         #[cfg(feature = "dot")]
-        self.labels.borrow_mut().reserve(additional);
+        self.labels.reserve(additional);
     }
 
     /// Shrinks the capacity of the graph as much as possible.
@@ -235,7 +235,7 @@ impl<T> Graph<T>
         self.inbound_table.shrink_to_fit();
 
         #[cfg(feature = "dot")]
-        self.labels.borrow_mut().shrink_to_fit();
+        self.labels.shrink_to_fit();
 
         // Calculate additional value for edges vector
         // such that it is always n^2 where n is the
@@ -1267,7 +1267,7 @@ impl<T> Graph<T>
         }
 
         let old_label = self.label(vertex_id).unwrap();
-        self.labels.borrow_mut().insert(vertex_id.clone(), label.to_owned());
+        self.labels.insert(vertex_id.clone(), label.to_owned());
         
         Ok(old_label)
     }
@@ -1282,7 +1282,7 @@ impl<T> Graph<T>
             return None;
         }
         
-        if let Some(label) = self.labels.borrow().get(vertex_id) {
+        if let Some(label) = self.labels.get(vertex_id) {
             return Some(label.clone());
         }
 
@@ -1299,11 +1299,12 @@ impl<T> Graph<T>
         let label = format!("N_{}", encoded);
         assert!(dot::Id::new(label.to_owned()).is_ok());
 
-        {
-            self.labels.borrow_mut().insert(vertex_id.clone(), label);
+        unsafe {
+            let labels_ptr = mem::transmute::<&HashMap<VertexId, String>, &mut HashMap<VertexId, String>>(&self.labels);
+            labels_ptr.insert(vertex_id.clone(), label);
         }
         
-        self.labels.borrow().get(vertex_id).map(|s| s.clone())
+        self.labels.get(vertex_id).map(|s| s.clone())
     }
 
     fn do_add_edge(&mut self, a: &VertexId, b: &VertexId, weight: f32) -> Result<(), GraphErr> {
@@ -1412,6 +1413,19 @@ impl<T> Graph<T>
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn is_thread_safe() {
+        let mut graph: Graph<usize> = Graph::new();
+        graph.add_vertex(0);
+
+        std::panic::set_hook(Box::new(move |_| {
+            let mut graph = graph.clone();
+
+            graph.add_vertex(1);
+            graph.add_vertex(2);
+        }));
+    }
 
     #[test]
     fn dfs() {

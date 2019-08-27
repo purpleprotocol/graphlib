@@ -37,6 +37,8 @@
 //! assert_eq!(graph.edge_count(), 0);
 //! ```
 
+#![allow(mutable_transmutes)]
+
 mod edge;
 #[macro_use]
 mod macros;
