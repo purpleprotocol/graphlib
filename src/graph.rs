@@ -1304,7 +1304,7 @@ impl<T> Graph<T>
             labels_ptr.insert(vertex_id.clone(), label);
         }
         
-        self.labels.get(vertex_id).map(|s| s.clone())
+        self.labels.get(vertex_id).cloned()
     }
 
     #[cfg(feature = "dot")]
@@ -1321,6 +1321,7 @@ impl<T> Graph<T>
     /// let v1 = graph.add_vertex(0);
     /// let v2 = graph.add_vertex(1);
     /// let v3 = graph.add_vertex(2);
+    /// let v4 = graph.add_vertex(3);
     /// 
     /// assert!(graph.label_vertex(&v1, &format!("V{}", vertex_id)).is_ok());
     /// vertex_id += 1;
@@ -1334,7 +1335,7 @@ impl<T> Graph<T>
     /// assert_eq!(graph.label(&v2).unwrap(), "V2");
     /// assert_eq!(graph.label(&v3).unwrap(), "V3");
     /// 
-    /// let new_labels: HashMap<VertexId, String> = vec![v1.clone(), v2.clone(), v3.clone()]
+    /// let new_labels: HashMap<VertexId, String> = vec![v1.clone(), v2.clone(), v3.clone(), v4.clone()]
     ///     .iter()
     ///     .map(|id| {
     ///         vertex_id += 1;
@@ -1349,8 +1350,14 @@ impl<T> Graph<T>
     /// assert_eq!(graph.label(&v1).unwrap(), "V4");
     /// assert_eq!(graph.label(&v2).unwrap(), "V5");
     /// assert_eq!(graph.label(&v3).unwrap(), "V6");
+    /// assert_eq!(graph.label(&v4).unwrap(), "V7");
     /// ```
     pub fn map_labels(&mut self, mut fun: impl FnMut(&VertexId, &str) -> String) {
+        // Initialize all labels
+        for (v, _) in self.vertices.iter() {
+            let _ = self.label(v);
+        }
+        
         for (id, l) in self.labels.iter_mut() {
             let new_label = fun(id, l);
             *l = new_label;
