@@ -1,6 +1,6 @@
 [package]
 name = "graphlib"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Octavian Oncescu <octavonce@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/purpleprotocol/graphlib"
@@ -42,4 +42,5 @@ sbench = []
 no_std = ["hashbrown/nightly"]
 
 [package.metadata.docs.rs]
-all-features = true
+features = ["dot"]
+no-default-features = true
