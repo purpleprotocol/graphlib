@@ -66,12 +66,7 @@ use rand_isaac::IsaacRng;
 use core::sync::atomic::Ordering;
 
 pub(crate) fn gen_bytes() -> [u8; 16] {
-    let bytes = IsaacRng::gen::<[u8; 16]>(&mut IsaacRng::seed_from_u64(IsaacRng::next_u64(
-        &mut IsaacRng::seed_from_u64(SEED.load(Ordering::Relaxed) as u64),
-    )));
-
-    // change global variable to create new random the next time
-    SEED.fetch_add(1, Ordering::Relaxed);
-
-    bytes
+    IsaacRng::gen::<[u8; 16]>(&mut IsaacRng::seed_from_u64(IsaacRng::next_u64(
+        &mut IsaacRng::seed_from_u64(SEED.fetch_add(1, Ordering::Relaxed) as u64),
+    )))
 }
