@@ -207,4 +207,22 @@ mod tests {
         topo.next();
     }
 
+    #[test]
+    fn was_cyclic() {
+        let mut graph: Graph<usize> = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+        let v3 = graph.add_vertex(3);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v2, &v3).unwrap();
+        graph.add_edge(&v3, &v1).unwrap();
+
+        graph.remove_edge(&v3, &v1);
+
+        let mut topo = graph.topo();
+
+        assert!(!topo.is_cyclic());
+    }
 }
