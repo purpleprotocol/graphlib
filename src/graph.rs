@@ -612,6 +612,16 @@ impl<T> Graph<T>
     pub fn remove_edge(&mut self, a: &VertexId, b: &VertexId) {
         if let Some(outbounds) = self.outbound_table.get_mut(a) {
             outbounds.retain(|v| v != b);
+            if outbounds.is_empty() {
+                self.outbound_table.remove(a);
+            }
+        }
+
+        if let Some(inbounds) = self.inbound_table.get_mut(b) {
+            inbounds.retain(|v| v != a);
+            if inbounds.is_empty() {
+                self.inbound_table.remove(b);
+            }
         }
 
         // If outbound vertex doesn't have any more inbounds,
@@ -1552,5 +1562,26 @@ mod tests {
         }
 
         assert_eq!(dfs.count(), 0, "There were remaining nodes");
+    }
+
+    #[test]
+    fn test_remove_edge() {
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(0);
+        let v2 = graph.add_vertex(1);
+        let v3 = graph.add_vertex(2);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v2, &v3).unwrap();
+
+        let old_inbound = graph.inbound_table.clone();
+        let old_outbound = graph.outbound_table.clone();
+
+        graph.add_edge(&v3, &v1).unwrap();
+        graph.remove_edge(&v3, &v1);
+
+        assert_eq!(old_inbound, graph.inbound_table.clone());
+        assert_eq!(old_outbound, graph.outbound_table.clone());
     }
 }
