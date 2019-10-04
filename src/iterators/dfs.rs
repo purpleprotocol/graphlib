@@ -192,4 +192,77 @@ mod tests {
 
         assert_eq!(graph.is_cyclic(), false);
     }
+
+    #[test]
+    fn not_cyclic_edge_to_successor() {
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+        let v3 = graph.add_vertex(3);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v2, &v3).unwrap();
+        graph.add_edge(&v1, &v3).unwrap();
+
+        assert_eq!(graph.is_cyclic(), false);
+    }
+
+    #[test]
+    fn not_cyclic_edge_split_merge() {
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+        let v3 = graph.add_vertex(3);
+        let v4 = graph.add_vertex(4);
+        let v5 = graph.add_vertex(5);
+        let v6 = graph.add_vertex(6);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v2, &v3).unwrap();
+        graph.add_edge(&v3, &v4).unwrap();
+        graph.add_edge(&v3, &v5).unwrap();
+        graph.add_edge(&v4, &v6).unwrap();
+        graph.add_edge(&v5, &v6).unwrap();
+
+        assert_eq!(graph.is_cyclic(), false);
+    }
+
+    #[test]
+    fn not_cyclic_split_merge_continue() {
+        // TODO: rename that test
+
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+        let v3 = graph.add_vertex(3);
+        let v4 = graph.add_vertex(4);
+        let v5 = graph.add_vertex(5);
+        let v6 = graph.add_vertex(6);
+        let v7 = graph.add_vertex(7);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v2, &v3).unwrap();
+        graph.add_edge(&v3, &v4).unwrap();
+        graph.add_edge(&v3, &v5).unwrap();
+        graph.add_edge(&v4, &v6).unwrap();
+        graph.add_edge(&v5, &v6).unwrap();
+        graph.add_edge(&v1, &v6).unwrap();
+        graph.add_edge(&v6, &v7).unwrap();
+
+        assert_eq!(graph.is_cyclic(), false);
+    }
+
+    #[test]
+    fn cycle_self_edge() {
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+
+        graph.add_edge(&v1, &v1).unwrap();
+
+        assert!(graph.is_cyclic());
+    }
 }
