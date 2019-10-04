@@ -33,7 +33,7 @@ pub struct Dfs<'a, T>
     /// All grey vertices.
     grey: HashSet<VertexId>,
     /// All vertices pending processing.
-    pending_stack: Vec<VertexId>,
+    pending_stack: Vec<(VertexId, bool)>,
     /// The Graph being iterated.
     iterable: &'a Graph<T>,
     /// A cached answer to the question: does this Graph contain cycles.
@@ -80,11 +80,7 @@ impl<'a, T> Dfs<'a, T>
     /// * No vertices are left.
     /// * The next vertex forms a cycle.
     fn process_vertex(&mut self) -> Option<&'a VertexId> {
-        //We have traversed this partition of the graph, move on.
         if self.pending_stack.is_empty() {
-            //Mark all the grey vertices black.
-            self.black.extend(self.grey.drain());
-
             //Spliting the borrows for the borrow checker.
             let unchecked = &mut self.unchecked;
             let black = &self.black;
@@ -94,36 +90,55 @@ impl<'a, T> Dfs<'a, T>
 
             //We found a new vertex.
             if let Some(v) = next {
-                self.pending_stack.push(v);
+                self.pending_stack.push((v, false));
             }
         }
 
-        //Get the next pending vertex.
-        self.pending_stack
+        // get next vertex
+        let mut should_return = true;
+        let n = self
+            .pending_stack
             .pop()
             .iter()
             //Filter cycles.
             .filter_map(|v| {
-                //If this vertex forms a cycle do not return it.
-                if !self.grey.insert(*v) {
-                    self.cached_cyclic = true;
+                let (v, already_seen) = v;
 
-                    return None;
-                }
+                // if we have seen the vertex before,
+                // we remove it from grey and add it to black
+                if *already_seen {
+                    self.grey.remove(v);
+                    self.black.insert(*v);
+                } else {
+                    // otherwise we remember that we have to
+                    // mark it as done (i.e. move it to black)
+                    // the next time we see it
+                    self.grey.insert(*v);
+                    self.pending_stack.push((*v, true));
 
-                //Add all of its neighbours to be processed.
-                for v in self.iterable.out_neighbors(v) {
-                    //This neighbour forms a cycle don't process it.
-                    if self.grey.contains(v) {
-                        self.cached_cyclic = true
-                    } else {
-                        self.pending_stack.push(*v)
+                    // add all successors that are not already marked
+                    // "under consideration", i.e. in grey
+                    for v in self.iterable.out_neighbors(v) {
+                        if self.grey.contains(v) {
+                            // if we do encounter such an edge,
+                            // there is a cycle
+                            self.cached_cyclic = true;
+                        } else if !self.black.contains(v) {
+                            self.pending_stack.push((*v, false));
+                        }
                     }
                 }
-
+                // we don't want to return nodes twice so we only
+                // return a node when we haven't seen it yet
+                should_return = !*already_seen;
                 self.iterable.fetch_id_ref(v)
             })
-            .next()
+            .next();
+        if should_return {
+            n
+        } else {
+            self.process_vertex()
+        }
     }
 }
 
@@ -191,5 +206,78 @@ mod tests {
         graph.add_vertex(());
 
         assert_eq!(graph.is_cyclic(), false);
+    }
+
+    #[test]
+    fn not_cyclic_edge_to_successor() {
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+        let v3 = graph.add_vertex(3);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v2, &v3).unwrap();
+        graph.add_edge(&v1, &v3).unwrap();
+
+        assert_eq!(graph.is_cyclic(), false);
+    }
+
+    #[test]
+    fn not_cyclic_edge_split_merge() {
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+        let v3 = graph.add_vertex(3);
+        let v4 = graph.add_vertex(4);
+        let v5 = graph.add_vertex(5);
+        let v6 = graph.add_vertex(6);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v2, &v3).unwrap();
+        graph.add_edge(&v3, &v4).unwrap();
+        graph.add_edge(&v3, &v5).unwrap();
+        graph.add_edge(&v4, &v6).unwrap();
+        graph.add_edge(&v5, &v6).unwrap();
+
+        assert_eq!(graph.is_cyclic(), false);
+    }
+
+    #[test]
+    fn not_cyclic_split_merge_continue() {
+        // TODO: rename that test
+
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+        let v3 = graph.add_vertex(3);
+        let v4 = graph.add_vertex(4);
+        let v5 = graph.add_vertex(5);
+        let v6 = graph.add_vertex(6);
+        let v7 = graph.add_vertex(7);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v2, &v3).unwrap();
+        graph.add_edge(&v3, &v4).unwrap();
+        graph.add_edge(&v3, &v5).unwrap();
+        graph.add_edge(&v4, &v6).unwrap();
+        graph.add_edge(&v5, &v6).unwrap();
+        graph.add_edge(&v1, &v6).unwrap();
+        graph.add_edge(&v6, &v7).unwrap();
+
+        assert_eq!(graph.is_cyclic(), false);
+    }
+
+    #[test]
+    fn cycle_self_edge() {
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+
+        graph.add_edge(&v1, &v1).unwrap();
+
+        assert!(graph.is_cyclic());
     }
 }
