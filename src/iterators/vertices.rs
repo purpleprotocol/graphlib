@@ -1,33 +1,28 @@
 // Copyright 2019 Octavian Oncescu
 
 use crate::vertex_id::VertexId;
+#[cfg(feature = "no_std")]
+use core::fmt::Debug;
+#[cfg(feature = "no_std")]
+extern crate alloc;
+#[cfg(feature = "no_std")]
+use alloc::boxed::Box;
+#[cfg(not(feature = "no_std"))]
+use std::fmt::Debug;
 
+pub(crate) trait MergedTrait<'a>: Iterator<Item = &'a VertexId> + Debug {}
+
+impl<'a, T> MergedTrait<'a> for T where T: Iterator<Item = &'a VertexId> + Debug {}
+
+/// Generic Vertex Iterator.
 #[derive(Debug)]
-pub struct VertexIter<'a> {
-    current: usize,
-    iterable: Vec<&'a VertexId>,
-}
-
-impl<'a> VertexIter<'a> {
-    pub fn new(neighbors: Vec<&'a VertexId>) -> VertexIter<'a> {
-        VertexIter {
-            current: 0,
-            iterable: neighbors,
-        }
-    }
-}
+pub struct VertexIter<'a>(pub(crate) Box<dyn 'a + MergedTrait<'a>>);
 
 impl<'a> Iterator for VertexIter<'a> {
     type Item = &'a VertexId;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.current == self.iterable.len() {
-            return None;
-        }
-
-        let result = self.iterable[self.current];
-        self.current += 1;
-
-        Some(result)
+        self.0.next()
     }
 }

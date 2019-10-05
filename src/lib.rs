@@ -1,7 +1,10 @@
 // Copyright 2019 Octavian Oncescu
 
+#![cfg_attr(feature = "no_std", feature(alloc))]
+#![cfg_attr(feature = "no_std", no_std)]
+
 //! # Graphlib
-//! Graphlib is a simple and powerful rust library for the graph data-structure.
+//! Graphlib is a simple and powerful Rust graph library.
 //!
 //! ---
 //!
@@ -34,6 +37,8 @@
 //! assert_eq!(graph.edge_count(), 0);
 //! ```
 
+#![allow(mutable_transmutes)]
+
 mod edge;
 #[macro_use]
 mod macros;
@@ -41,5 +46,27 @@ mod graph;
 pub mod iterators;
 mod vertex_id;
 
+// use global variables to create VertexId::random()
+use core::sync::atomic::AtomicUsize;
+
+#[cfg(feature="dot")]
+pub mod dot;
+
 pub use graph::*;
 pub use vertex_id::*;
+
+static SEED: AtomicUsize = AtomicUsize::new(0);
+
+use rand;
+use rand::Rng;
+use rand::SeedableRng;
+use rand_core::RngCore;
+use rand_isaac::IsaacRng;
+
+use core::sync::atomic::Ordering;
+
+pub(crate) fn gen_bytes() -> [u8; 16] {
+    IsaacRng::gen::<[u8; 16]>(&mut IsaacRng::seed_from_u64(IsaacRng::next_u64(
+        &mut IsaacRng::seed_from_u64(SEED.fetch_add(1, Ordering::Relaxed) as u64),
+    )))
+}

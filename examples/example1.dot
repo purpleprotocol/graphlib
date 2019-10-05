@@ -1,0 +1,12 @@
+digraph example1 {
+    test1[label="test1"];
+    test2[label="test2"];
+    test3[label="test3"];
+    test4[label="test4"];
+    test5[label="test5"];
+    test6[label="test6"];
+    test2 -> test1[label=""];
+    test1 -> test3[label=""];
+    test4 -> test1[label=""];
+    test6 -> test5[label=""];
+}

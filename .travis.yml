@@ -11,6 +11,21 @@ matrix:
     - rust: nightly
   fast_finish: true
 
+git:
+  depth: 10
+
+before_script:
+  - chmod +x benches-compare.sh
+
 script:
-  - cargo build --verbose --all
-  - cargo test --verbose --all
+  - cargo build --verbose --all --features "dot"
+  - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
+    cargo +nightly build --features "no_std dot" --verbose --all;
+    fi
+  - cargo test --verbose --all --features "dot"
+  - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
+      cargo +nightly test --features "no_std dot" --verbose --all;
+    fi
+
+after_script:
+  - ./benches-compare.sh

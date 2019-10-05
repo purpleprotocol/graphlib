@@ -1,7 +1,7 @@
 # Graphlib 
-[![Build Status]][travis] [![Latest Version]][crates.io] [![Documentation]][docs.rs]
+[![Build Status]][travis] [![Discord Badge]][Discord] [![Latest Version]][crates.io] [![Documentation]][docs.rs] 
 
-Graphlib is a simple and powerful rust library for the graph data-structure. 
+Graphlib is a simple and powerful Rust graph library. 
 
 ---
 
@@ -33,6 +33,14 @@ graph.remove(&id1);
 assert_eq!(graph.vertex_count(), 1);
 assert_eq!(graph.edge_count(), 0);
 ```
+
+### Using without `std`
+In `Cargo.toml`:
+```toml
+[dependencies]
+graphlib = {version = "*", features = ["no_std"]}
+```
+
 ### Contributing
 We welcome anyone wishing to contribute to Graphlib! Check out the [issues section][issues] of the repository before starting out.
 
@@ -41,6 +49,8 @@ We welcome anyone wishing to contribute to Graphlib! Check out the [issues secti
 Graphlib is licensed under the MIT license.
 
 [Build Status]: https://travis-ci.org/purpleprotocol/graphlib.svg?branch=master
+[Discord Badge]: https://img.shields.io/discord/435827644915777536.svg
+[Discord]: https://discord.gg/eGBzyaA
 [travis]: https://travis-ci.org/purpleprotocol/graphlib
 [crates.io]: https://crates.io/crates/graphlib
 [Latest Version]: https://img.shields.io/crates/v/graphlib.svg

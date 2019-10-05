@@ -1,11 +1,11 @@
 [package]
 name = "graphlib"
-version = "0.2.0"
+version = "0.5.3"
 authors = ["Octavian Oncescu <octavonce@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/purpleprotocol/graphlib"
-keywords = ["graph", "data-structure", "mutable", "graph-algorithm"]
-categories = ["data-structure"]
+keywords = ["graph", "data-structures", "mutable", "graph-algorithm", "no-std"]
+categories = ["data-structures", "no-std"]
 description = "Graphlib is a simple and powerful rust library for the graph data-structure."
 license = "MIT"
 readme = "README.md"
@@ -14,5 +14,33 @@ readme = "README.md"
 travis-ci = { repository = "purpleprotocol/graphlib", branch = "master" }
 
 [dependencies]
-rand = "0.6.0"
-hashbrown = { version = "0.1", features = ["rayon"] }
+rand = {version ="0.6.5", default-features = false}
+rand_core = "0.4.0"
+rand_isaac = "0.1.1"
+hex = "0.3.2"
+hashbrown = { version = "0.1.8", features = ["rayon"] }
+dot = {version = "0.1.4", optional=true}
+
+[dev-dependencies]
+criterion = "0.2.10"
+# Due to criterion dependency on std
+rand = "0.6.5"
+
+[[bench]]
+name = "benchmark"
+harness = false
+
+[features]
+
+default = []
+# use `cargo bench --features sbench` only if you want benchmarks with 10 million
+# iterations (may fail on some systems)
+sbench = []
+
+# nightly feature for `no_std`
+# for build use `cargo +nightly build --features no_std`
+no_std = ["hashbrown/nightly"]
+
+[package.metadata.docs.rs]
+features = ["dot"]
+no-default-features = true

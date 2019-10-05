@@ -1,186 +1,283 @@
 // Copyright 2019 Octavian Oncescu
 
 use crate::graph::Graph;
+use crate::iterators::VertexIter;
 use crate::vertex_id::VertexId;
 
-use hashbrown::HashMap;
-use std::sync::Arc;
+#[cfg(feature = "no_std")]
+use core::iter::{Chain, Cloned, Peekable};
+use hashbrown::HashSet;
+#[cfg(not(feature = "no_std"))]
+use std::iter::{Chain, Cloned, Peekable};
+
+#[cfg(feature = "no_std")]
+extern crate alloc;
+#[cfg(feature = "no_std")]
+use alloc::vec::Vec;
+
+#[cfg(feature = "no_std")]
+use core::fmt::Debug;
+
+#[cfg(not(feature = "no_std"))]
+use std::fmt::Debug;
 
 #[derive(Debug)]
-pub struct Dfs<'a, T> {
-    recursion_stack: Vec<Arc<VertexId>>,
-    color_map: HashMap<Arc<VertexId>, Color>,
-    roots_stack: Vec<Arc<VertexId>>,
+/// Depth-First Iterator
+pub struct Dfs<'a, T> 
+    where T: Clone + Debug
+{
+    /// All the vertices to be checked with the roots coming first.
+    unchecked: Peekable<Cloned<Chain<VertexIter<'a>, VertexIter<'a>>>>,
+    /// All black vertices.
+    black: HashSet<VertexId>,
+    /// All grey vertices.
+    grey: HashSet<VertexId>,
+    /// All vertices pending processing.
+    pending_stack: Vec<(VertexId, bool)>,
+    /// The Graph being iterated.
     iterable: &'a Graph<T>,
+    /// A cached answer to the question: does this Graph contain cycles.
+    cached_cyclic: bool,
 }
 
-#[derive(Debug)]
-enum Color {
-    White,
-    Grey,
-    Black,
-}
-
-impl<'a, T> Dfs<'a, T> {
+impl<'a, T> Dfs<'a, T> 
+    where T: Clone + Debug
+{
     pub fn new(graph: &'a Graph<T>) -> Dfs<'_, T> {
-        let mut roots_stack = Vec::with_capacity(graph.roots_count());
-        let color_map: HashMap<Arc<VertexId>, Color> = graph
-            .vertices()
-            .map(|v| (Arc::from(*v), Color::White))
-            .collect();
-
-        if graph.roots_count() == 0 && graph.vertex_count() != 0 {
-            // Pick random vertex as first root
-            for (random_vertex, _) in color_map.iter() {
-                roots_stack.push(random_vertex.clone());
-                break;
-            }
-        } else {
-            for v in graph.roots() {
-                roots_stack.push(Arc::from(*v));
-            }
-        }
+        let unchecked = graph.roots().chain(graph.vertices()).cloned().peekable();
 
         Dfs {
-            color_map,
-            recursion_stack: Vec::with_capacity(graph.vertex_count()),
-            roots_stack,
+            unchecked,
             iterable: graph,
+            cached_cyclic: false,
+            grey: HashSet::new(),
+            black: HashSet::new(),
+            pending_stack: Vec::new(),
         }
     }
 
     /// Returns true if the iterated graph has a cycle.
+    ///
+    /// # Warning
+    ///
+    /// It is a logic error to use this iterator after calling this function.
     pub fn is_cyclic(&mut self) -> bool {
-        while !self.roots_stack.is_empty() {
-            let root = self.roots_stack[self.roots_stack.len() - 1].clone();
+        //Check for a cached answer.
+        if self.cached_cyclic {
+            return self.cached_cyclic;
+        }
 
-            // No vertices have been visited yet,
-            // so we begin from the current root.
-            if self.recursion_stack.is_empty() {
-                self.recursion_stack.push(root.clone());
-                self.color_map.insert(root.clone(), Color::Grey);
-            }
+        //Search until an answer is found.
+        while self.process_vertex().is_some() {}
 
-            let mut current = self.recursion_stack.pop().unwrap();
+        self.cached_cyclic
+    }
 
-            loop {
-                if self.iterable.out_neighbors_count(current.as_ref()) == 0
-                    && !self.recursion_stack.is_empty()
-                {
-                    // Mark as processed
-                    self.color_map.insert(current.clone(), Color::Black);
+    /// Processes the next vertex.
+    ///
+    /// Will return None if:
+    ///
+    /// * No vertices are left.
+    /// * The next vertex forms a cycle.
+    fn process_vertex(&mut self) -> Option<&'a VertexId> {
+        if self.pending_stack.is_empty() {
+            //Spliting the borrows for the borrow checker.
+            let unchecked = &mut self.unchecked;
+            let black = &self.black;
 
-                    // Set new current as popped value from recursion stack
-                    current = self.recursion_stack.pop().unwrap();
-                    continue;
-                }
+            //Search for an unprocessed vertex.
+            let next = unchecked.find(move |v| !black.contains(v));
 
-                break;
-            }
-
-            let mut all_are_black = true;
-
-            // Traverse current neighbors
-            for n in self.iterable.out_neighbors(current.as_ref()) {
-                let reference = Arc::from(*n);
-
-                if let Some(Color::White) = self.color_map.get(&reference) {
-                    self.recursion_stack.push(current.clone());
-                    self.recursion_stack.push(reference.clone());
-                    self.color_map.insert(reference, Color::Grey);
-                    all_are_black = false;
-                    break;
-                }
-
-                // This means there is a cycle
-                if let Some(Color::Grey) = self.color_map.get(&reference) {
-                    return true;
-                }
-            }
-
-            if all_are_black {
-                self.color_map.insert(current.clone(), Color::Black);
-            }
-
-            // Begin traversing from next root if the
-            // recursion stack is empty.
-            if self.recursion_stack.is_empty() {
-                self.roots_stack.pop();
+            //We found a new vertex.
+            if let Some(v) = next {
+                self.pending_stack.push((v, false));
             }
         }
 
-        false
+        // get next vertex
+        let mut should_return = true;
+        let n = self
+            .pending_stack
+            .pop()
+            .iter()
+            //Filter cycles.
+            .filter_map(|v| {
+                let (v, already_seen) = v;
+
+                // if we have seen the vertex before,
+                // we remove it from grey and add it to black
+                if *already_seen {
+                    self.grey.remove(v);
+                    self.black.insert(*v);
+                } else {
+                    // otherwise we remember that we have to
+                    // mark it as done (i.e. move it to black)
+                    // the next time we see it
+                    self.grey.insert(*v);
+                    self.pending_stack.push((*v, true));
+
+                    // add all successors that are not already marked
+                    // "under consideration", i.e. in grey
+                    for v in self.iterable.out_neighbors(v) {
+                        if self.grey.contains(v) {
+                            // if we do encounter such an edge,
+                            // there is a cycle
+                            self.cached_cyclic = true;
+                        } else if !self.black.contains(v) {
+                            self.pending_stack.push((*v, false));
+                        }
+                    }
+                }
+                // we don't want to return nodes twice so we only
+                // return a node when we haven't seen it yet
+                should_return = !*already_seen;
+                self.iterable.fetch_id_ref(v)
+            })
+            .next();
+        if should_return {
+            n
+        } else {
+            self.process_vertex()
+        }
     }
 }
 
-impl<'a, T> Iterator for Dfs<'a, T> {
+impl<'a, T> Iterator for Dfs<'a, T>
+    where T: Clone + Debug
+{
     type Item = &'a VertexId;
 
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.iterable.vertex_count() - self.black.len();
+
+        (0, Some(remaining))
+    }
     fn next(&mut self) -> Option<Self::Item> {
-        while !self.roots_stack.is_empty() {
-            let root = self.roots_stack[self.roots_stack.len() - 1].clone();
+        (0..self.size_hint().1.unwrap())
+            .filter_map(move |_| self.process_vertex())
+            .next()
+    }
+}
 
-            // No vertices have been visited yet,
-            // so we begin from the current root.
-            if self.recursion_stack.is_empty() {
-                self.recursion_stack.push(root.clone());
-                self.color_map.insert(root.clone(), Color::Grey);
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-                return self.iterable.fetch_id_ref(root.as_ref());
+    #[test]
+    fn is_cyclic() {
+        /*
+        A previous version of the function would fail if the iterator had passed through the last cycle.
+
+        The current version written 2019-03-23 caches if any cycles have been found as it
+        iterates to resolve this issue.
+        */
+
+        for _ in 0..100 {
+            let mut graph = Graph::new();
+
+            let v = graph.add_vertex(0);
+
+            assert!(graph.add_edge(&v, &v).is_ok(), "Failed to create cycle");
+
+            for _ in 0..100 {
+                graph.add_vertex(0);
             }
 
-            // Check if the topmost item on the recursion stack
-            // has outbound neighbors. If it does, we traverse
-            // them until we find one that is unvisited.
-            //
-            // If either the topmost item on the recursion stack
-            // doesn't have neighbors or all of its neighbors
-            // are visited, we pop it from the stack.
-            let mut current = self.recursion_stack.pop().unwrap();
+            let mut dfs = graph.dfs();
 
-            loop {
-                if self.iterable.out_neighbors_count(current.as_ref()) == 0
-                    && !self.recursion_stack.is_empty()
-                {
-                    // Mark as processed
-                    self.color_map.insert(current.clone(), Color::Black);
-
-                    // Pop from recursion stack
-                    current = self.recursion_stack.pop().unwrap();
-
-                    continue;
-                }
-
-                break;
+            for _ in 0..99 {
+                dfs.next();
             }
 
-            let mut mark = true;
-
-            // Traverse current neighbors
-            for n in self.iterable.out_neighbors(current.as_ref()) {
-                let reference = Arc::from(*n);
-
-                if let Some(Color::White) = self.color_map.get(&reference) {
-                    self.recursion_stack.push(current);
-                    self.recursion_stack.push(reference.clone());
-                    self.color_map.insert(reference, Color::Grey);
-                    mark = false;
-
-                    return Some(n);
-                }
-            }
-
-            if mark {
-                self.color_map.insert(current.clone(), Color::Black);
-            }
-
-            // Begin traversing from next root if the
-            // recursion stack is empty.
-            if self.recursion_stack.is_empty() {
-                self.roots_stack.pop();
-            }
+            assert!(dfs.is_cyclic());
         }
+    }
+    #[test]
+    fn not_cyclic() {
+        let mut graph = Graph::new();
 
-        None
+        let v1 = graph.add_vertex(());
+        let v2 = graph.add_vertex(());
+        let v3 = graph.add_vertex(());
+
+        graph.add_edge(&v1, &v2);
+        graph.add_edge(&v3, &v2);
+
+        graph.add_vertex(());
+
+        assert_eq!(graph.is_cyclic(), false);
+    }
+
+    #[test]
+    fn not_cyclic_edge_to_successor() {
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+        let v3 = graph.add_vertex(3);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v2, &v3).unwrap();
+        graph.add_edge(&v1, &v3).unwrap();
+
+        assert_eq!(graph.is_cyclic(), false);
+    }
+
+    #[test]
+    fn not_cyclic_edge_split_merge() {
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+        let v3 = graph.add_vertex(3);
+        let v4 = graph.add_vertex(4);
+        let v5 = graph.add_vertex(5);
+        let v6 = graph.add_vertex(6);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v2, &v3).unwrap();
+        graph.add_edge(&v3, &v4).unwrap();
+        graph.add_edge(&v3, &v5).unwrap();
+        graph.add_edge(&v4, &v6).unwrap();
+        graph.add_edge(&v5, &v6).unwrap();
+
+        assert_eq!(graph.is_cyclic(), false);
+    }
+
+    #[test]
+    fn not_cyclic_split_merge_continue() {
+        // TODO: rename that test
+
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+        let v3 = graph.add_vertex(3);
+        let v4 = graph.add_vertex(4);
+        let v5 = graph.add_vertex(5);
+        let v6 = graph.add_vertex(6);
+        let v7 = graph.add_vertex(7);
+
+        graph.add_edge(&v1, &v2).unwrap();
+        graph.add_edge(&v2, &v3).unwrap();
+        graph.add_edge(&v3, &v4).unwrap();
+        graph.add_edge(&v3, &v5).unwrap();
+        graph.add_edge(&v4, &v6).unwrap();
+        graph.add_edge(&v5, &v6).unwrap();
+        graph.add_edge(&v1, &v6).unwrap();
+        graph.add_edge(&v6, &v7).unwrap();
+
+        assert_eq!(graph.is_cyclic(), false);
+    }
+
+    #[test]
+    fn cycle_self_edge() {
+        let mut graph = Graph::new();
+
+        let v1 = graph.add_vertex(1);
+
+        graph.add_edge(&v1, &v1).unwrap();
+
+        assert!(graph.is_cyclic());
     }
 }
