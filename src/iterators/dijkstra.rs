@@ -1,6 +1,7 @@
 // Copyright 2019 Chakrapani Gautam
 
 use crate::graph::{ Graph, GraphErr };
+use crate::edge::Edge;
 use crate::vertex_id::VertexId;
 use crate::iterators::vertices::VertexIter;
 
@@ -71,6 +72,12 @@ impl<'a, T> Dijkstra<'a, T>
         if graph.fetch(src).is_none() {
             return Err(GraphErr::NoSuchVertex);
         }
+        
+        for edge in graph.edges() {
+            if graph.weight(edge.1, edge.0).unwrap() < 0.0 {
+                return Err(GraphErr::InvalidWeight);
+            }
+        }
     
         let mut instance = Dijkstra {
             source: src,
@@ -103,6 +110,7 @@ impl<'a, T> Dijkstra<'a, T>
     
         if self.previous.contains_key(vert) {
             let mut curr_vert = Some(vert);
+            self.iterator.clear();
 
             while !curr_vert.is_none() {
                 self.iterator.push(*curr_vert.unwrap());
@@ -113,7 +121,7 @@ impl<'a, T> Dijkstra<'a, T>
                 }
             }
 
-            return Ok(VertexIter(Box::new(self.iterator.iter().rev())));
+            return Ok(VertexIter(Box::new(self.iterator.iter())));
         }
 
         Ok(VertexIter(Box::new(iter::empty())))
@@ -198,6 +206,20 @@ mod tests {
 
         let result = Dijkstra::new(&graph, &random_vertex);
 
+        assert!(result.is_err());
+    }
+    
+    #[test]
+    fn test_new_with_negative_weight_edge() {
+        let mut graph: Graph<usize> = Graph::new();
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+        
+        graph.add_edge_with_weight(&v1, &v2, -0.1);
+        graph.add_edge_with_weight(&v2, &v1, 0.1);
+        
+        let result = Dijkstra::new(&graph, &v1);
+        
         assert!(result.is_err());
     }
 
@@ -292,5 +314,35 @@ mod tests {
         assert_eq!(iterator.get_distance(&v_d).unwrap(), 0.3);
         assert_eq!(iterator.get_distance(&v_e).unwrap(), 0.9);
         assert_eq!(iterator.get_distance(&v_f).unwrap(), 1.1);
+        
+        iterator.set_source(&v_c);
+        
+        assert_eq!(iterator.get_distance(&v_a).unwrap(), 0.4);
+        assert_eq!(iterator.get_distance(&v_b).unwrap(), 0.3);
+        assert_eq!(iterator.get_distance(&v_c).unwrap(), 0.0);
+        assert_eq!(iterator.get_distance(&v_d).unwrap(), 0.1);
+        assert_eq!(iterator.get_distance(&v_e).unwrap(), 0.5);
+        assert_eq!(iterator.get_distance(&v_f).unwrap(), 0.90000004); 
+        // Ugh! I wish there was something like `assert_approx_eq!()`. Too lazy to write on my own.
+        
+        assert_eq!(iterator.get_path_to(&v_a).unwrap().count(), 4);
+        assert_eq!(iterator.get_path_to(&v_b).unwrap().count(), 3);
+        assert_eq!(iterator.get_path_to(&v_c).unwrap().count(), 1);
+        assert_eq!(iterator.get_path_to(&v_d).unwrap().count(), 2);
+        assert_eq!(iterator.get_path_to(&v_e).unwrap().count(), 2);
+        assert_eq!(iterator.get_path_to(&v_f).unwrap().count(), 3);
+        
+        /*
+        // To run these tests, uncomment and use `-- --nocapture` flag in `cargo test`
+        
+        for vert in graph.vertices() {
+            println!("Current vertex: {:?}", graph.fetch(vert));
+            
+            for arg in iterator.get_path_to(vert).unwrap() {
+                print!(" {:?}", graph.fetch(arg));
+            }
+            println!();
+        }
+        */
     }
 }
