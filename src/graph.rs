@@ -17,12 +17,6 @@ use core::fmt::Debug;
 use std::fmt::Debug;
 
 #[cfg(feature = "no_std")]
-use core::mem;
-
-#[cfg(not(feature = "no_std"))]
-use std::mem;
-
-#[cfg(feature = "no_std")]
 extern crate alloc;
 #[cfg(feature = "no_std")]
 use alloc::boxed::Box;
