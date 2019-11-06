@@ -1237,8 +1237,8 @@ impl<T> Graph<T>
     ///
     ///  assert!(graph.to_dot("example1", &mut f).is_ok());
     /// ```
-    pub fn to_dot(&self, graph_name: &str, output: &mut impl ::std::io::Write) -> Result<(), GraphErr> {
-        let edges : Vec<(_, _)> = self.edges.iter().map(|(w, _)| {
+    pub fn to_dot(&mut self, graph_name: &str, output: &mut impl ::std::io::Write) -> Result<(), GraphErr> {
+        let edges : Vec<(_, _)> = self.edges.keys().cloned().collect::<Vec<_>>().iter().map(|w| {
             let inbound = w.inbound();
             let outbound = w.outbound();
 
@@ -1287,7 +1287,7 @@ impl<T> Graph<T>
     /// 
     /// This function will return a default label if no label is set. Returns
     /// `None` if there is no vertex associated with the given id in the graph.
-    pub fn label(&self, vertex_id: &VertexId) -> Option<String> {
+    pub fn label(&mut self, vertex_id: &VertexId) -> Option<String> {
         if self.vertices.get(vertex_id).is_none() {
             return None;
         }
@@ -1309,12 +1309,9 @@ impl<T> Graph<T>
         let label = format!("N_{}", encoded);
         debug_assert!(dot::Id::new(label.to_owned()).is_ok());
 
-        unsafe {
-            let labels_ptr = mem::transmute::<&HashMap<VertexId, String>, &mut HashMap<VertexId, String>>(&self.labels);
-            labels_ptr.insert(vertex_id.clone(), label);
-        }
-        
-        self.labels.get(vertex_id).cloned()
+        self.labels.insert(vertex_id.clone(), label.clone());
+
+        Some(label)
     }
 
     #[cfg(feature = "dot")]
@@ -1364,7 +1361,7 @@ impl<T> Graph<T>
     /// ```
     pub fn map_labels(&mut self, mut fun: impl FnMut(&VertexId, &str) -> String) {
         // Initialize all labels
-        for (v, _) in self.vertices.iter() {
+        for v in &self.vertices.keys().cloned().collect::<Vec<_>>() {
             let _ = self.label(v);
         }
         
