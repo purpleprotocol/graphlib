@@ -1584,4 +1584,21 @@ mod tests {
         assert_eq!(old_inbound, graph.inbound_table.clone());
         assert_eq!(old_outbound, graph.outbound_table.clone());
     }
+
+    #[cfg(feature = "dot")]
+    #[test]
+    fn test_label() {
+        let mut graph: Graph<usize> = Graph::new();
+        let random_id = VertexId::random();
+
+        let v1 = graph.add_vertex(0);
+        let v2 = graph.add_vertex(1);
+
+        assert!(graph.label_vertex(&v1, &format!("V{}", 0)).is_ok());
+
+        assert!(graph.label(&random_id).is_none());
+        assert_eq!(graph.label(&v1).unwrap(), "V0");
+        assert!(graph.label(&v2).is_some());
+        assert_ne!(graph.label(&v2).unwrap(), "");
+    }
 }
