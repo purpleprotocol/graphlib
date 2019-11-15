@@ -1602,4 +1602,42 @@ mod tests {
         assert_eq!(old_inbound, graph.inbound_table.clone());
         assert_eq!(old_outbound, graph.outbound_table.clone());
     }
+
+    #[test]
+    fn test_non_clonable_type() {
+        // this simply tests that a Graph that has a non-clonable type can be created
+        // this is done easiest by adding dyn Trait object, which can never be cloned
+        //
+        // It also tests that the dyn object can still be used as expected
+        let mut graph = Graph::<Box<dyn std::fmt::Display>>::new();
+
+        graph.add_vertex(Box::new(String::from("Hello World")));
+        let mut result = String::new();
+        for vertex_identifier in graph.vertices() {
+            if let Some(v) = graph.fetch(vertex_identifier) {
+                result = format!("{}", v);
+            }
+        }
+
+        assert_eq!(result, "Hello World");
+    }
+    #[test]
+    fn test_clonable() {
+        let mut graph = Graph::new();
+        graph.add_vertex(String::from("Test"));
+
+        let cloned = graph.clone();
+        assert_eq!(graph.vertex_count(), cloned.vertex_count());
+        let mut cloned_iter = cloned.vertices();
+        for vertex_identifier in graph.vertices() {
+            if let Some(cloned_identifier) = cloned_iter.next() {
+                assert_eq!(
+                    graph.fetch(vertex_identifier),
+                    cloned.fetch(cloned_identifier)
+                );
+            } else {
+                panic!("graph and clone of graph are not equal!");
+            }
+        }
+    }
 }
