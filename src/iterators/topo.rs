@@ -20,9 +20,7 @@ const PANIC_MSG: &str = "graph contains cycle(s)";
 
 #[derive(Debug)]
 /// Topological Iterator
-pub struct Topo<'a, T> 
-    where T: Clone + Debug
-{
+pub struct Topo<'a, T> {
     /// The Graph being iterated.
     iterable: &'a Graph<T>,
     /// Processed vertices
@@ -33,9 +31,7 @@ pub struct Topo<'a, T>
     vertex_edges: HashMap<&'a VertexId, usize>,
 }
 
-impl<'a, T> Topo<'a, T> 
-    where T: Clone + Debug
-{
+impl<'a, T> Topo<'a, T> {
     pub fn new(graph: &'a Graph<T>) -> Topo<'_, T> {
         let mut roots = vec![];
         for node in graph.roots() {
@@ -75,13 +71,13 @@ impl<'a, T> Topo<'a, T>
                     }
                 }
                 Some(node)
-            },
+            }
             None => {
                 if check_cyclic && self.vertices.len() != self.iterable.vertex_count() {
                     panic!(PANIC_MSG);
                 }
                 None
-            },
+            }
         }
     }
 
@@ -99,9 +95,7 @@ impl<'a, T> Topo<'a, T>
     }
 }
 
-impl<'a, T> Iterator for Topo<'a, T> 
-    where T: Clone + Debug
-{
+impl<'a, T> Iterator for Topo<'a, T> {
     type Item = &'a VertexId;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
