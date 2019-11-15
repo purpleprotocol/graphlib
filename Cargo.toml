@@ -22,7 +22,7 @@ hashbrown = { version = "0.1.8", features = ["rayon"] }
 dot = {version = "0.1.4", optional=true}
 
 [dev-dependencies]
-criterion = "0.2.10"
+criterion = "0.3.0"
 # Due to criterion dependency on std
 rand = "0.6.5"
 
