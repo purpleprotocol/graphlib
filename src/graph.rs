@@ -726,7 +726,7 @@ impl<T> Graph<T> {
     /// assert_eq!(mapped.fetch(&id1).unwrap(), &3);
     /// assert_eq!(mapped.fetch(&id2).unwrap(), &4);
     /// ```
-    pub fn map<R: Clone + Debug>(&self, fun: impl Fn(&T) -> R) -> Graph<R> {
+    pub fn map<R>(&self, fun: impl Fn(&T) -> R) -> Graph<R> {
         let mut graph: Graph<R> = Graph::new();
 
         // Copy edge and vertex information
