@@ -10,7 +10,7 @@ use std::collections::VecDeque;
 #[cfg(feature = "no_std")]
 extern crate alloc;
 #[cfg(feature = "no_std")]
-use alloc::{collections::vec_deque::VecDeque};
+use alloc::collections::vec_deque::VecDeque;
 
 #[cfg(feature = "no_std")]
 use alloc::vec::Vec;
@@ -23,9 +23,7 @@ use std::fmt::Debug;
 
 #[derive(Debug)]
 /// Breadth-First Iterator
-pub struct Bfs<'a, T> 
-    where T: Clone + Debug
-{
+pub struct Bfs<'a, T> {
     queue: VecDeque<VertexId>,
     current_ptr: Option<VertexId>,
     visited_set: HashSet<VertexId>,
@@ -33,9 +31,7 @@ pub struct Bfs<'a, T>
     iterable: &'a Graph<T>,
 }
 
-impl<'a, T> Bfs<'a, T> 
-    where T: Clone + Debug
-{
+impl<'a, T> Bfs<'a, T> {
     pub fn new(graph: &'a Graph<T>) -> Bfs<'_, T> {
         let mut roots_stack = Vec::with_capacity(graph.roots_count());
 
@@ -55,9 +51,7 @@ impl<'a, T> Bfs<'a, T>
     }
 }
 
-impl<'a, T> Iterator for Bfs<'a, T> 
-    where T: Clone + Debug
-{
+impl<'a, T> Iterator for Bfs<'a, T> {
     type Item = &'a VertexId;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -106,4 +100,3 @@ impl<'a, T> Iterator for Bfs<'a, T>
         }
     }
 }
-

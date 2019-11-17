@@ -66,9 +66,7 @@ pub enum GraphErr {
 
 #[derive(Clone, Debug)]
 /// Graph data-structure
-pub struct Graph<T> 
-    where T: Clone + Debug
-{
+pub struct Graph<T> {
     /// Mapping of vertex ids and vertex values
     vertices: HashMap<VertexId, (T, VertexId)>,
 
@@ -92,9 +90,7 @@ pub struct Graph<T>
     labels: HashMap<VertexId, String>,
 }
 
-impl<T> Graph<T> 
-    where T: Clone + Debug
-{
+impl<T> Graph<T> {
     /// Creates a new graph.
     ///
     /// ## Example
@@ -322,7 +318,12 @@ impl<T> Graph<T>
     /// // existing vertex and a non-existing one.
     /// assert_eq!(graph.weight(&v1, &v2), Some(0.3));
     /// ```
-    pub fn add_edge_with_weight(&mut self, a: &VertexId, b: &VertexId, weight: f32) -> Result<(), GraphErr> {
+    pub fn add_edge_with_weight(
+        &mut self,
+        a: &VertexId,
+        b: &VertexId,
+        weight: f32,
+    ) -> Result<(), GraphErr> {
         if self.has_edge(a, b) {
             return Ok(());
         }
@@ -336,7 +337,7 @@ impl<T> Graph<T>
 
     /// Returns the weight of the specified edge
     /// if it is listed.
-    /// 
+    ///
     /// ```rust
     /// use graphlib::{Graph, GraphErr, VertexId};
     ///
@@ -369,9 +370,9 @@ impl<T> Graph<T>
 
     /// Sets the weight of the edge to the new value
     /// if the edge exists in the graph. Note that
-    /// the given weight must be a number between 
+    /// the given weight must be a number between
     /// (and including) `-1.0` and `1.0`.
-    /// 
+    ///
     /// ```rust
     /// use graphlib::{Graph, GraphErr, VertexId};
     ///
@@ -386,12 +387,17 @@ impl<T> Graph<T>
     ///
     /// graph.add_edge_with_weight(&v1, &v2, 0.54543);
     /// assert_eq!(graph.weight(&v1, &v2), Some(0.54543));
-    /// 
+    ///
     /// // Set new weight
     /// graph.set_weight(&v1, &v2, 0.123).unwrap();
     /// assert_eq!(graph.weight(&v1, &v2), Some(0.123));
     /// ```
-    pub fn set_weight(&mut self, a: &VertexId, b: &VertexId, new_weight: f32) -> Result<(), GraphErr> {
+    pub fn set_weight(
+        &mut self,
+        a: &VertexId,
+        b: &VertexId,
+        new_weight: f32,
+    ) -> Result<(), GraphErr> {
         if !self.has_edge(a, b) {
             return Err(GraphErr::NoSuchEdge);
         }
@@ -400,13 +406,14 @@ impl<T> Graph<T>
             return Err(GraphErr::InvalidWeight);
         }
 
-        self.edges.insert(Edge::new(a.clone(), b.clone()), new_weight);
-        
+        self.edges
+            .insert(Edge::new(a.clone(), b.clone()), new_weight);
+
         // Sort outbound vertices after setting a new weight
         let mut outbounds = self.outbound_table.get(a).unwrap().clone();
 
         self.sort_outbounds(a.clone(), &mut outbounds);
-        
+
         // Update outbounds
         self.outbound_table.insert(a.clone(), outbounds);
 
@@ -553,7 +560,7 @@ impl<T> Graph<T>
     pub fn remove(&mut self, id: &VertexId) {
         self.vertices.remove(id);
 
-        // Remove each inbound edge        
+        // Remove each inbound edge
         if let Some(inbounds) = self.inbound_table.remove(id) {
             for vertex in inbounds {
                 self.remove_edge(&vertex, id);
@@ -658,11 +665,12 @@ impl<T> Graph<T>
     /// assert_eq!(graph.vertex_count(), 2);
     /// ```
     pub fn retain(&mut self, fun: impl Fn(&T) -> bool) {
-        let vertices: Vec<VertexId> = self.vertices()
+        let vertices: Vec<VertexId> = self
+            .vertices()
             .filter(|v| !fun(self.fetch(v).unwrap()))
             .cloned()
             .collect();
-        
+
         vertices.iter().for_each(|v| self.remove(&v));
     }
 
@@ -695,7 +703,7 @@ impl<T> Graph<T>
 
     /// Performs a map over all of the vertices of the graph,
     /// applying the given transformation function to each one.
-    /// 
+    ///
     /// Returns a new graph with the same edges but with transformed
     /// vertices.
     /// ## Example
@@ -705,12 +713,12 @@ impl<T> Graph<T>
     /// let mut graph: Graph<usize> = Graph::new();
     /// let id1 = graph.add_vertex(1);
     /// let id2 = graph.add_vertex(2);
-    /// 
+    ///
     /// graph.add_edge(&id1, &id2);
-    /// 
+    ///
     /// // Map each vertex
     /// let mapped: Graph<usize> = graph.map(|v| v + 2);
-    /// 
+    ///
     /// assert!(graph.has_edge(&id1, &id2));
     /// assert!(mapped.has_edge(&id1, &id2));
     /// assert_eq!(graph.fetch(&id1).unwrap(), &1);
@@ -718,16 +726,17 @@ impl<T> Graph<T>
     /// assert_eq!(mapped.fetch(&id1).unwrap(), &3);
     /// assert_eq!(mapped.fetch(&id2).unwrap(), &4);
     /// ```
-    pub fn map<R: Clone + Debug>(&self, fun: impl Fn(&T) -> R) -> Graph<R> {
+    pub fn map<R>(&self, fun: impl Fn(&T) -> R) -> Graph<R> {
         let mut graph: Graph<R> = Graph::new();
-        
+
         // Copy edge and vertex information
         graph.edges = self.edges.clone();
         graph.roots = self.roots.clone();
         graph.tips = self.tips.clone();
         graph.inbound_table = self.inbound_table.clone();
         graph.outbound_table = self.outbound_table.clone();
-        graph.vertices = self.vertices
+        graph.vertices = self
+            .vertices
             .iter()
             .map(|(id, (v, i))| (id.clone(), (fun(v), i.clone())))
             .collect();
@@ -973,7 +982,7 @@ impl<T> Graph<T>
 
     /// Returns an iterator over all edges that are situated
     /// in the graph.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -998,10 +1007,7 @@ impl<T> Graph<T>
     /// assert_eq!(edges.len(), 3);
     /// ```
     pub fn edges(&self) -> impl Iterator<Item = (&VertexId, &VertexId)> {
-        self
-            .edges
-            .iter()
-            .map(|(e, _)| (e.inbound(), e.outbound()))
+        self.edges.iter().map(|(e, _)| (e.inbound(), e.outbound()))
     }
 
     /// Returns an iterator over the root vertices
@@ -1038,7 +1044,7 @@ impl<T> Graph<T>
     /// Returns an iterator over the tips of the graph. These
     /// are all the vertices that have an inbound edge but no
     /// outbound edge.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::Graph;
@@ -1097,7 +1103,7 @@ impl<T> Graph<T>
     /// Returns an iterator over the vertices
     /// of the graph in Depth-First Order. The iterator
     /// will follow vertices with lower weights first.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// # #[macro_use] extern crate graphlib; fn main() {
@@ -1237,13 +1243,21 @@ impl<T> Graph<T>
     ///
     ///  assert!(graph.to_dot("example1", &mut f).is_ok());
     /// ```
-    pub fn to_dot(&self, graph_name: &str, output: &mut impl ::std::io::Write) -> Result<(), GraphErr> {
-        let edges : Vec<(_, _)> = self.edges.iter().map(|(w, _)| {
-            let inbound = w.inbound();
-            let outbound = w.outbound();
+    pub fn to_dot(
+        &self,
+        graph_name: &str,
+        output: &mut impl ::std::io::Write,
+    ) -> Result<(), GraphErr> {
+        let edges: Vec<(_, _)> = self
+            .edges
+            .iter()
+            .map(|(w, _)| {
+                let inbound = w.inbound();
+                let outbound = w.outbound();
 
-            (self.label(inbound).unwrap(), self.label(outbound).unwrap())
-        }).collect();
+                (self.label(inbound).unwrap(), self.label(outbound).unwrap())
+            })
+            .collect();
 
         let edges = crate::dot::Edges::new(edges, graph_name)?;
         dot::render(&edges, output).map_err(|_| GraphErr::CouldNotRender)
@@ -1251,7 +1265,7 @@ impl<T> Graph<T>
 
     #[cfg(feature = "dot")]
     /// Labels the vertex with the given id. Returns the old label if successful.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// use graphlib::{Graph, VertexId};
@@ -1262,7 +1276,7 @@ impl<T> Graph<T>
     /// let v1 = graph.add_vertex(0);
     /// let v2 = graph.add_vertex(1);
     /// let v3 = graph.add_vertex(2);
-    /// 
+    ///
     /// assert!(graph.label_vertex(&v1, "V1").is_ok());
     /// assert!(graph.label_vertex(&v2, "V2").is_ok());
     /// assert!(graph.label_vertex(&v3, "V3").is_ok());
@@ -1278,48 +1292,47 @@ impl<T> Graph<T>
 
         let old_label = self.label(vertex_id).unwrap();
         self.labels.insert(vertex_id.clone(), label.to_owned());
-        
+
         Ok(old_label)
     }
 
     #[cfg(feature = "dot")]
     /// Retrieves the label of the vertex with the given id.
-    /// 
+    ///
     /// This function will return a default label if no label is set. Returns
     /// `None` if there is no vertex associated with the given id in the graph.
     pub fn label(&self, vertex_id: &VertexId) -> Option<String> {
         if self.vertices.get(vertex_id).is_none() {
             return None;
         }
-        
+
         if let Some(label) = self.labels.get(vertex_id) {
             return Some(label.clone());
         }
 
         let bytes = super::gen_bytes();
-        
+
         // Take only 8 bytes out of 16
-        let to_encode: Vec<u8> = bytes
-            .iter()
-            .take(8)
-            .cloned()
-            .collect();
-            
+        let to_encode: Vec<u8> = bytes.iter().take(8).cloned().collect();
+
         let encoded = hex::encode(&to_encode);
         let label = format!("N_{}", encoded);
         debug_assert!(dot::Id::new(label.to_owned()).is_ok());
 
         unsafe {
-            let labels_ptr = mem::transmute::<&HashMap<VertexId, String>, &mut HashMap<VertexId, String>>(&self.labels);
+            let labels_ptr = mem::transmute::<
+                &HashMap<VertexId, String>,
+                &mut HashMap<VertexId, String>,
+            >(&self.labels);
             labels_ptr.insert(vertex_id.clone(), label);
         }
-        
+
         self.labels.get(vertex_id).cloned()
     }
 
     #[cfg(feature = "dot")]
     /// Maps each label that is placed on a vertex to a new label.
-    /// 
+    ///
     /// ```rust
     /// use std::collections::HashMap;
     /// use graphlib::{Graph, VertexId};
@@ -1332,31 +1345,31 @@ impl<T> Graph<T>
     /// let v2 = graph.add_vertex(1);
     /// let v3 = graph.add_vertex(2);
     /// let v4 = graph.add_vertex(3);
-    /// 
+    ///
     /// assert!(graph.label_vertex(&v1, &format!("V{}", vertex_id)).is_ok());
     /// vertex_id += 1;
-    /// 
+    ///
     /// assert!(graph.label_vertex(&v2, &format!("V{}", vertex_id)).is_ok());
     /// vertex_id += 1;
-    /// 
+    ///
     /// assert!(graph.label_vertex(&v3, &format!("V{}", vertex_id)).is_ok());
-    /// 
+    ///
     /// assert_eq!(graph.label(&v1).unwrap(), "V1");
     /// assert_eq!(graph.label(&v2).unwrap(), "V2");
     /// assert_eq!(graph.label(&v3).unwrap(), "V3");
-    /// 
+    ///
     /// let new_labels: HashMap<VertexId, String> = vec![v1.clone(), v2.clone(), v3.clone(), v4.clone()]
     ///     .iter()
     ///     .map(|id| {
     ///         vertex_id += 1;
     ///         let label = format!("V{}", vertex_id);
-    /// 
+    ///
     ///         (id.clone(), label)
     ///     })
     ///     .collect();
-    /// 
+    ///
     /// graph.map_labels(|id, _old_label| new_labels.get(id).unwrap().clone());
-    /// 
+    ///
     /// assert_eq!(graph.label(&v1).unwrap(), "V4");
     /// assert_eq!(graph.label(&v2).unwrap(), "V5");
     /// assert_eq!(graph.label(&v3).unwrap(), "V6");
@@ -1367,7 +1380,7 @@ impl<T> Graph<T>
         for (v, _) in self.vertices.iter() {
             let _ = self.label(v);
         }
-        
+
         for (id, l) in self.labels.iter_mut() {
             let new_label = fun(id, l);
             *l = new_label;
@@ -1413,8 +1426,7 @@ impl<T> Graph<T>
                 inbounds.push(id_ptr1);
             }
             None => {
-                self.inbound_table
-                    .insert(id_ptr2, vec![id_ptr1]);
+                self.inbound_table.insert(id_ptr2, vec![id_ptr1]);
             }
         }
 
@@ -1430,9 +1442,17 @@ impl<T> Graph<T>
     fn sort_outbounds(&self, inbound: VertexId, outbounds: &mut Vec<VertexId>) {
         let outbound_weights: HashMap<VertexId, f32> = outbounds
             .iter()
-            .map(|id| (id.clone(), *self.edges.get(&Edge::new(inbound.clone(), id.clone())).unwrap()))
+            .map(|id| {
+                (
+                    id.clone(),
+                    *self
+                        .edges
+                        .get(&Edge::new(inbound.clone(), id.clone()))
+                        .unwrap(),
+                )
+            })
             .collect();
-        
+
         // Sort outbounds
         outbounds.sort_by(|a, b| {
             let a_weight = outbound_weights.get(a).cloned();
@@ -1460,9 +1480,7 @@ impl<T> Graph<T>
                     }
                 }
                 // Sort lexicographically by ids if no weight is set
-                (None, None) => {
-                    a.cmp(b)
-                }
+                (None, None) => a.cmp(b),
             }
         });
     }
@@ -1583,5 +1601,43 @@ mod tests {
 
         assert_eq!(old_inbound, graph.inbound_table.clone());
         assert_eq!(old_outbound, graph.outbound_table.clone());
+    }
+
+    #[test]
+    fn test_non_clonable_type() {
+        // this simply tests that a Graph that has a non-clonable type can be created
+        // this is done easiest by adding dyn Trait object, which can never be cloned
+        //
+        // It also tests that the dyn object can still be used as expected
+        let mut graph = Graph::<Box<dyn std::fmt::Display>>::new();
+
+        graph.add_vertex(Box::new(String::from("Hello World")));
+        let mut result = String::new();
+        for vertex_identifier in graph.vertices() {
+            if let Some(v) = graph.fetch(vertex_identifier) {
+                result = format!("{}", v);
+            }
+        }
+
+        assert_eq!(result, "Hello World");
+    }
+    #[test]
+    fn test_clonable() {
+        let mut graph = Graph::new();
+        graph.add_vertex(String::from("Test"));
+
+        let cloned = graph.clone();
+        assert_eq!(graph.vertex_count(), cloned.vertex_count());
+        let mut cloned_iter = cloned.vertices();
+        for vertex_identifier in graph.vertices() {
+            if let Some(cloned_identifier) = cloned_iter.next() {
+                assert_eq!(
+                    graph.fetch(vertex_identifier),
+                    cloned.fetch(cloned_identifier)
+                );
+            } else {
+                panic!("graph and clone of graph are not equal!");
+            }
+        }
     }
 }

@@ -23,9 +23,7 @@ use std::fmt::Debug;
 
 #[derive(Debug)]
 /// Depth-First Iterator
-pub struct Dfs<'a, T> 
-    where T: Clone + Debug
-{
+pub struct Dfs<'a, T> {
     /// All the vertices to be checked with the roots coming first.
     unchecked: Peekable<Cloned<Chain<VertexIter<'a>, VertexIter<'a>>>>,
     /// All black vertices.
@@ -40,9 +38,7 @@ pub struct Dfs<'a, T>
     cached_cyclic: bool,
 }
 
-impl<'a, T> Dfs<'a, T> 
-    where T: Clone + Debug
-{
+impl<'a, T> Dfs<'a, T> {
     pub fn new(graph: &'a Graph<T>) -> Dfs<'_, T> {
         let unchecked = graph.roots().chain(graph.vertices()).cloned().peekable();
 
@@ -142,9 +138,7 @@ impl<'a, T> Dfs<'a, T>
     }
 }
 
-impl<'a, T> Iterator for Dfs<'a, T>
-    where T: Clone + Debug
-{
+impl<'a, T> Iterator for Dfs<'a, T> {
     type Item = &'a VertexId;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
