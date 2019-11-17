@@ -74,8 +74,13 @@ impl<'a, T> Dijkstra<'a, T>
         }
         
         for edge in graph.edges() {
-            if graph.weight(edge.1, edge.0).unwrap() < 0.0 {
-                return Err(GraphErr::InvalidWeight);
+            match graph.weight(edge.1, edge.0) {
+                Some(w) => {
+                    if w < 0.0 {
+                        return Err(GraphErr::InvalidWeight);
+                    }
+                },
+                None => {}
             }
         }
     
@@ -98,6 +103,8 @@ impl<'a, T> Dijkstra<'a, T>
         }
         
         self.source = vert;
+        self.distances.clear();
+        self.previous.clear();
         self.calc_distances();
         
         Ok(())
@@ -162,13 +169,18 @@ impl<'a, T> Dijkstra<'a, T>
             
             for neighbour in self.iterable.out_neighbors(&vert_meta.id) {
                 if !visited.contains(&neighbour) {
-                    let alt_dist = self.distances.get(&vert_meta.id).unwrap() + self.iterable.weight(&vert_meta.id, &neighbour).unwrap();
+                    let mut alt_dist = self.distances.get(&vert_meta.id).unwrap().clone(); 
+                    
+                    match self.iterable.weight(&vert_meta.id, &neighbour) {
+                        Some(w) => alt_dist += w,
+                        None => {}
+                    }
                     
                     if alt_dist < *self.distances.get(&neighbour).unwrap() {
                         self.distances.insert(*neighbour, alt_dist);
                         self.previous.insert(*neighbour, Some(vert_meta.id));
                         
-                        vertex_pq.push(  VertexMeta {
+                        vertex_pq.push( VertexMeta {
                             id: *neighbour,
                             distance: alt_dist
                         });
@@ -332,6 +344,72 @@ mod tests {
         assert_eq!(iterator.get_path_to(&v_e).unwrap().count(), 2);
         assert_eq!(iterator.get_path_to(&v_f).unwrap().count(), 3);
         
+        /*
+        // To run these tests, uncomment and use `-- --nocapture` flag in `cargo test`
+        
+        for vert in graph.vertices() {
+            println!("Current vertex: {:?}", graph.fetch(vert));
+            
+            for arg in iterator.get_path_to(vert).unwrap() {
+                print!(" {:?}", graph.fetch(arg));
+            }
+            println!();
+        }
+        */
+    }
+    
+    #[test]
+    fn test_on_unweighted_graph() {
+        let infinity = f32::MAX;
+        
+        let mut graph: Graph<usize> = Graph::new();
+        
+        let v_a = graph.add_vertex(1);
+        let v_b = graph.add_vertex(2);
+        let v_c = graph.add_vertex(3);
+        let v_d = graph.add_vertex(4);
+        let v_e = graph.add_vertex(5);
+        let v_f = graph.add_vertex(6);
+        
+        graph.add_edge(&v_a, &v_b);
+        graph.add_edge(&v_b, &v_d);
+        graph.add_edge(&v_c, &v_b);
+        graph.add_edge(&v_c, &v_d);
+        graph.add_edge(&v_c, &v_e);
+        graph.add_edge(&v_d, &v_f);
+        
+        let mut iterator = Dijkstra::new(&graph, &v_a).unwrap();
+        
+        assert_eq!(iterator.get_distance(&v_a).unwrap(), 0.0);
+        assert_eq!(iterator.get_distance(&v_b).unwrap(), 0.0);
+        assert_eq!(iterator.get_distance(&v_c).unwrap(), infinity);
+        assert_eq!(iterator.get_distance(&v_d).unwrap(), 0.0);
+        assert_eq!(iterator.get_distance(&v_e).unwrap(), infinity);
+        assert_eq!(iterator.get_distance(&v_f).unwrap(), 0.0);
+        
+        assert_eq!(iterator.get_path_to(&v_a).unwrap().count(), 1);
+        assert_eq!(iterator.get_path_to(&v_b).unwrap().count(), 2);
+        assert_eq!(iterator.get_path_to(&v_c).unwrap().count(), 0);
+        assert_eq!(iterator.get_path_to(&v_d).unwrap().count(), 3);
+        assert_eq!(iterator.get_path_to(&v_e).unwrap().count(), 0);
+        assert_eq!(iterator.get_path_to(&v_f).unwrap().count(), 4);
+        
+        iterator.set_source(&v_c);
+        
+        assert_eq!(iterator.get_distance(&v_a).unwrap(), infinity);
+        assert_eq!(iterator.get_distance(&v_b).unwrap(), 0.0);
+        assert_eq!(iterator.get_distance(&v_c).unwrap(), 0.0);
+        assert_eq!(iterator.get_distance(&v_d).unwrap(), 0.0);
+        assert_eq!(iterator.get_distance(&v_e).unwrap(), 0.0);
+        assert_eq!(iterator.get_distance(&v_f).unwrap(), 0.0); 
+        
+        assert_eq!(iterator.get_path_to(&v_a).unwrap().count(), 0);
+        assert_eq!(iterator.get_path_to(&v_b).unwrap().count(), 2);
+        assert_eq!(iterator.get_path_to(&v_c).unwrap().count(), 1);
+        assert_eq!(iterator.get_path_to(&v_d).unwrap().count(), 2);
+        assert_eq!(iterator.get_path_to(&v_e).unwrap().count(), 2);
+        assert_eq!(iterator.get_path_to(&v_f).unwrap().count(), 3);
+       
         /*
         // To run these tests, uncomment and use `-- --nocapture` flag in `cargo test`
         
