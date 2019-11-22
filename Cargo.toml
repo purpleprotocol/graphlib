@@ -14,17 +14,17 @@ readme = "README.md"
 travis-ci = { repository = "purpleprotocol/graphlib", branch = "master" }
 
 [dependencies]
-rand = {version ="0.6.5", default-features = false}
-rand_core = "0.4.0"
-rand_isaac = "0.1.1"
-hex = "0.3.2"
-hashbrown = { version = "0.1.8", features = ["rayon"] }
+rand = {version ="0.7.2", default-features = false}
+rand_core = "0.5.1"
+rand_isaac = "0.2.0"
+hex = "0.4.0"
+hashbrown = { version = "0.6.3", features = ["rayon"] }
 dot = {version = "0.1.4", optional=true}
 
 [dev-dependencies]
-criterion = "0.2.10"
+criterion = "0.3.0"
 # Due to criterion dependency on std
-rand = "0.6.5"
+rand = "0.7.2"
 
 [[bench]]
 name = "benchmark"
