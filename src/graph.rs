@@ -1047,10 +1047,12 @@ impl<T> Graph<T> {
     ///
     /// ## Example
     /// ```rust
+    /// # #[macro_use] extern crate graphlib; fn main() {
+    /// # use std::collections::HashSet;
     /// use graphlib::Graph;
     ///
     /// let mut graph: Graph<usize> = Graph::new();
-    /// let mut tips = vec![];
+    /// let mut tips = set![];
     ///
     /// let v1 = graph.add_vertex(0);
     /// let v2 = graph.add_vertex(1);
@@ -1063,12 +1065,12 @@ impl<T> Graph<T> {
     ///
     /// // Iterate over tips
     /// for v in graph.tips() {
-    ///     tips.push(v);
+    ///     tips.insert(v);
     /// }
     ///
     /// assert_eq!(tips.len(), 2);
-    /// assert_eq!(tips[0], &v2);
-    /// assert_eq!(tips[1], &v4);
+    /// assert_eq!(tips, set![&v2, &v4]);
+    /// # }
     /// ```
     pub fn tips(&self) -> VertexIter<'_> {
         VertexIter(Box::new(self.tips.iter().map(AsRef::as_ref)))
