@@ -74,13 +74,10 @@ impl<'a, T> Dijkstra<'a, T>
         }
         
         for edge in graph.edges() {
-            match graph.weight(edge.1, edge.0) {
-                Some(w) => {
-                    if w < 0.0 {
-                        return Err(GraphErr::InvalidWeight);
-                    }
-                },
-                None => {}
+            if let Some(w) = graph.weight(edge.1, edge.0) {
+                if w < 0.0 {
+                    return Err(GraphErr::InvalidWeight);
+                }
             }
         }
     
@@ -171,16 +168,15 @@ impl<'a, T> Dijkstra<'a, T>
                 if !visited.contains(&neighbour) {
                     let mut alt_dist = self.distances.get(&vert_meta.id).unwrap().clone(); 
                     
-                    match self.iterable.weight(&vert_meta.id, &neighbour) {
-                        Some(w) => alt_dist += w,
-                        None => {}
+                    if let Some(w) = self.iterable.weight(&vert_meta.id, &neighbour) {
+                        alt_dist += w;
                     }
                     
                     if alt_dist < *self.distances.get(&neighbour).unwrap() {
                         self.distances.insert(*neighbour, alt_dist);
                         self.previous.insert(*neighbour, Some(vert_meta.id));
                         
-                        vertex_pq.push( VertexMeta {
+                        vertex_pq.push(VertexMeta {
                             id: *neighbour,
                             distance: alt_dist
                         });
