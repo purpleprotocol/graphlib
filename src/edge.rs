@@ -35,10 +35,7 @@ impl Hash for Edge {
 
 impl Edge {
     pub fn new(outbound: VertexId, inbound: VertexId) -> Edge {
-        Edge {
-            inbound,
-            outbound,
-        }
+        Edge { inbound, outbound }
     }
 
     /// Returns true if the given vertex ids are the

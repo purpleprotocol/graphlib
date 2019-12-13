@@ -2,12 +2,12 @@
 
 mod bfs;
 mod dfs;
+mod dijkstra;
 mod topo;
 mod vertices;
-mod dijkstra;
 
 pub use bfs::*;
 pub use dfs::*;
+pub use dijkstra::*;
 pub use topo::*;
 pub use vertices::*;
-pub use dijkstra::*;

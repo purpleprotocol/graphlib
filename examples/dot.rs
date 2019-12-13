@@ -14,7 +14,7 @@ pub fn main() {
     let v5 = graph.add_vertex("test5".to_string());
     let v6 = graph.add_vertex("test6".to_string());
 
-    #[cfg(feature = "dot")] 
+    #[cfg(feature = "dot")]
     {
         graph.label_vertex(&v1, "test1").unwrap();
         graph.label_vertex(&v2, "test2").unwrap();
