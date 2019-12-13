@@ -8,6 +8,10 @@ macro_rules! min {
 /// Returns a HashSet containing the passed values.
 #[macro_export]
 macro_rules! set {
+    () => ({
+        HashSet::new()
+    });
+
     ($fst:expr $(, $v:expr)*) => ({
         let mut set = HashSet::with_capacity(count!($fst $(, $v)*));
 
