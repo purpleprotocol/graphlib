@@ -12,13 +12,11 @@ use std::iter;
 
 #[cfg(feature = "no_std")]
 use core::fmt::Debug;
-
 #[cfg(not(feature = "no_std"))]
 use std::fmt::Debug;
 
 #[cfg(feature = "no_std")]
 use core::mem;
-
 #[cfg(not(feature = "no_std"))]
 use std::mem;
 
@@ -64,7 +62,7 @@ pub enum GraphErr {
     InvalidLabel,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 /// Graph data-structure
 pub struct Graph<T> {
     /// Mapping of vertex ids and vertex values
@@ -361,7 +359,7 @@ impl<T> Graph<T> {
             return None;
         }
 
-        if let Some(result) = self.edges.get(&Edge::new(a.clone(), b.clone())) {
+        if let Some(result) = self.edges.get(&Edge::new(*a, *b)) {
             Some(*result)
         } else {
             None
@@ -406,8 +404,7 @@ impl<T> Graph<T> {
             return Err(GraphErr::InvalidWeight);
         }
 
-        self.edges
-            .insert(Edge::new(a.clone(), b.clone()), new_weight);
+        self.edges.insert(Edge::new(*a, *b), new_weight);
 
         // Sort outbound vertices after setting a new weight
         let mut outbounds = self.outbound_table.get(a).unwrap().clone();
@@ -642,7 +639,7 @@ impl<T> Graph<T> {
             self.tips.insert(a.clone());
         }
 
-        self.edges.remove(&Edge::new(a.clone(), b.clone()));
+        self.edges.remove(&Edge::new(*a, *b));
     }
 
     /// Iterates through the graph and only keeps
@@ -738,7 +735,7 @@ impl<T> Graph<T> {
         graph.vertices = self
             .vertices
             .iter()
-            .map(|(id, (v, i))| (id.clone(), (fun(v), i.clone())))
+            .map(|(id, (v, i))| (*id, (fun(v), *i)))
             .collect();
 
         #[cfg(feature = "dot")]
@@ -921,8 +918,8 @@ impl<T> Graph<T> {
     ///
     /// ## Example
     /// ```rust
-    /// # #[macro_use] extern crate graphlib; fn main() {
-    /// # use std::collections::HashSet;
+    /// #[macro_use] extern crate graphlib;
+    /// use std::collections::HashSet;
     /// use graphlib::Graph;
     ///
     /// let mut graph: Graph<usize> = Graph::new();
@@ -937,7 +934,6 @@ impl<T> Graph<T> {
     /// graph.add_edge(&v1, &v4).unwrap();
     ///
     /// assert!(set![&v2, &v4] == graph.out_neighbors(&v1).collect());
-    /// # }
     /// ```
     pub fn out_neighbors(&self, id: &VertexId) -> VertexIter<'_> {
         match self.outbound_table.get(id) {
@@ -951,8 +947,8 @@ impl<T> Graph<T> {
     ///
     /// ## Example
     /// ```rust
-    /// # #[macro_use] extern crate graphlib; fn main() {
-    /// # use std::collections::HashSet;
+    /// #[macro_use] extern crate graphlib;
+    /// use std::collections::HashSet;
     /// use graphlib::Graph;
     ///
     /// let mut graph: Graph<usize> = Graph::new();
@@ -967,7 +963,6 @@ impl<T> Graph<T> {
     /// graph.add_edge(&v1, &v4).unwrap();
     ///
     /// assert!(set![&v2, &v4, &v3] == graph.neighbors(&v1).collect());
-    /// # }
     /// ```
     pub fn neighbors(&self, id: &VertexId) -> VertexIter<'_> {
         let mut visited = HashSet::new();
@@ -1047,8 +1042,8 @@ impl<T> Graph<T> {
     ///
     /// ## Example
     /// ```rust
-    /// # #[macro_use] extern crate graphlib; fn main() {
-    /// # use std::collections::HashSet;
+    /// #[macro_use] extern crate graphlib;
+    /// use std::collections::HashSet;
     /// use graphlib::Graph;
     ///
     /// let mut graph: Graph<usize> = Graph::new();
@@ -1070,7 +1065,6 @@ impl<T> Graph<T> {
     ///
     /// assert_eq!(tips.len(), 2);
     /// assert_eq!(tips, set![&v2, &v4]);
-    /// # }
     /// ```
     pub fn tips(&self) -> VertexIter<'_> {
         VertexIter(Box::new(self.tips.iter().map(AsRef::as_ref)))
@@ -1108,7 +1102,7 @@ impl<T> Graph<T> {
     ///
     /// ## Example
     /// ```rust
-    /// # #[macro_use] extern crate graphlib; fn main() {
+    /// #[macro_use] extern crate graphlib;
     /// use graphlib::Graph;
     /// use std::collections::HashSet;
     ///
@@ -1128,7 +1122,6 @@ impl<T> Graph<T> {
     /// assert_eq!(dfs.next(), Some(&v3));
     /// assert_eq!(dfs.next(), Some(&v1));
     /// assert!(set![&v2, &v4] == dfs.collect());
-    /// # }
     /// ```
     pub fn dfs(&self) -> Dfs<'_, T> {
         Dfs::new(self)
@@ -1191,7 +1184,7 @@ impl<T> Graph<T> {
     ///
     /// ## Example
     /// ```rust
-    /// # #[macro_use] extern crate graphlib; fn main() {
+    /// #[macro_use] extern crate graphlib;
     /// use graphlib::Graph;
     /// use std::collections::HashSet;
     ///
@@ -1211,7 +1204,6 @@ impl<T> Graph<T> {
     /// assert_eq!(topo.next(), Some(&v1));
     /// assert_eq!(topo.next(), Some(&v2));
     /// assert!(set![&v3, &v4] == topo.collect());
-    /// # }
     /// ```
     pub fn topo(&self) -> Topo<'_, T> {
         Topo::new(self)
@@ -1391,18 +1383,18 @@ impl<T> Graph<T> {
 
     fn do_add_edge(&mut self, a: &VertexId, b: &VertexId, weight: f32) -> Result<(), GraphErr> {
         let id_ptr1 = if self.vertices.get(a).is_some() {
-            a.clone()
+            *a
         } else {
             return Err(GraphErr::NoSuchVertex);
         };
 
         let id_ptr2 = if self.vertices.get(b).is_some() {
-            b.clone()
+            *b
         } else {
             return Err(GraphErr::NoSuchVertex);
         };
 
-        let edge = Edge::new(id_ptr1.clone(), id_ptr2.clone());
+        let edge = Edge::new(id_ptr1, id_ptr2);
 
         // Push edge
         self.edges.insert(edge, weight);
@@ -1417,8 +1409,7 @@ impl<T> Graph<T> {
                 self.outbound_table.insert(id_ptr1.clone(), outbounds);
             }
             None => {
-                self.outbound_table
-                    .insert(id_ptr1.clone(), vec![id_ptr2.clone()]);
+                self.outbound_table.insert(id_ptr1.clone(), vec![id_ptr2]);
             }
         }
 
@@ -1444,15 +1435,7 @@ impl<T> Graph<T> {
     fn sort_outbounds(&self, inbound: VertexId, outbounds: &mut Vec<VertexId>) {
         let outbound_weights: HashMap<VertexId, f32> = outbounds
             .iter()
-            .map(|id| {
-                (
-                    id.clone(),
-                    *self
-                        .edges
-                        .get(&Edge::new(inbound.clone(), id.clone()))
-                        .unwrap(),
-                )
-            })
+            .map(|id| (*id, *self.edges.get(&Edge::new(inbound, *id)).unwrap()))
             .collect();
 
         // Sort outbounds
@@ -1463,11 +1446,11 @@ impl<T> Graph<T> {
             match (a_weight, b_weight) {
                 // Sort normally if both weights are set
                 (Some(a_weight), Some(b_weight)) => {
-                    a_weight.partial_cmp(&b_weight).unwrap_or(a.cmp(b))
+                    a_weight.partial_cmp(&b_weight).unwrap_or_else(|| a.cmp(b))
                 }
                 (Some(weight), None) => {
                     if weight != 0.00 {
-                        weight.partial_cmp(&0.00).unwrap_or(a.cmp(b))
+                        weight.partial_cmp(&0.00).unwrap_or_else(|| a.cmp(b))
                     } else {
                         // Fallback to lexicographic sort
                         a.cmp(b)
@@ -1475,7 +1458,7 @@ impl<T> Graph<T> {
                 }
                 (None, Some(weight)) => {
                     if weight != 0.00 {
-                        weight.partial_cmp(&0.00).unwrap_or(a.cmp(b))
+                        weight.partial_cmp(&0.00).unwrap_or_else(|| a.cmp(b))
                     } else {
                         // Fallback to lexicographic sort
                         a.cmp(b)
@@ -1491,7 +1474,7 @@ impl<T> Graph<T> {
     /// which is equal to the given `VertexId`.
     pub(crate) fn fetch_id_ref<'b>(&'b self, id: &VertexId) -> Option<&'b VertexId> {
         match self.vertices.get(id) {
-            Some((_, id_ptr)) => Some(id_ptr.as_ref()),
+            Some((_, id_ptr)) => Some(id_ptr),
             None => None,
         }
     }
@@ -1602,7 +1585,7 @@ mod tests {
         graph.remove_edge(&v3, &v1);
 
         assert_eq!(old_inbound, graph.inbound_table.clone());
-        assert_eq!(old_outbound, graph.outbound_table.clone());
+        assert_eq!(old_outbound, graph.outbound_table);
     }
 
     #[test]
