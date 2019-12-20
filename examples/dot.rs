@@ -3,7 +3,7 @@ use graphlib::Graph;
 pub fn main() {
     // This example requires the `dot` feature.
     use std::fs::File;
-    let _f = File::create("example1.dot").unwrap();
+    let f = File::create("example1.dot").unwrap();
 
     let mut graph: Graph<String> = Graph::new();
 
