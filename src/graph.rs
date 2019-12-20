@@ -404,8 +404,7 @@ impl<T> Graph<T> {
             return Err(GraphErr::InvalidWeight);
         }
 
-        self.edges
-            .insert(Edge::new(*a, *b), new_weight);
+        self.edges.insert(Edge::new(*a, *b), new_weight);
 
         // Sort outbound vertices after setting a new weight
         let mut outbounds = self.outbound_table.get(a).unwrap().clone();
@@ -1410,8 +1409,7 @@ impl<T> Graph<T> {
                 self.outbound_table.insert(id_ptr1.clone(), outbounds);
             }
             None => {
-                self.outbound_table
-                    .insert(id_ptr1.clone(), vec![id_ptr2]);
+                self.outbound_table.insert(id_ptr1.clone(), vec![id_ptr2]);
             }
         }
 
@@ -1437,15 +1435,7 @@ impl<T> Graph<T> {
     fn sort_outbounds(&self, inbound: VertexId, outbounds: &mut Vec<VertexId>) {
         let outbound_weights: HashMap<VertexId, f32> = outbounds
             .iter()
-            .map(|id| {
-                (
-                    *id,
-                    *self
-                        .edges
-                        .get(&Edge::new(inbound, *id))
-                        .unwrap(),
-                )
-            })
+            .map(|id| (*id, *self.edges.get(&Edge::new(inbound, *id)).unwrap()))
             .collect();
 
         // Sort outbounds

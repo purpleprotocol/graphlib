@@ -1,6 +1,5 @@
 // Copyright 2019 Chakrapani Gautam
 
-
 use crate::graph::{Graph, GraphErr};
 use crate::iterators::vertices::VertexIter;
 use crate::vertex_id::VertexId;
