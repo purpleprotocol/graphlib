@@ -10,7 +10,7 @@ use graphlib::*;
 // 1. new() -> Graph<T>
 // 2. with_capacity(capacity: usize) -> Graph<T>
 fn bench_create(c: &mut Criterion) {
-    c.bench_function("new", |b| b.iter(|| Graph::<usize>::new()));
+    c.bench_function("new", |b| b.iter(Graph::<usize>::new));
 
     c.bench_function("with_capacity_10", |b| {
         b.iter(|| Graph::<usize>::with_capacity(10))
@@ -1228,7 +1228,7 @@ fn bench_others(c: &mut Criterion) {
         for i in 1..10 {
             graph.add_vertex(i);
         }
-        let mut id = graph.add_vertex(10);
+        let id = graph.add_vertex(10);
         b.iter(|| {
             let _k = *graph.fetch(&id).unwrap();
         })
@@ -1239,7 +1239,7 @@ fn bench_others(c: &mut Criterion) {
         for i in 1..100 {
             graph.add_vertex(i);
         }
-        let mut id = graph.add_vertex(100);
+        let id = graph.add_vertex(100);
         b.iter(|| {
             let _k = *graph.fetch(&id).unwrap();
         })
@@ -1250,7 +1250,7 @@ fn bench_others(c: &mut Criterion) {
         for i in 1..500 {
             graph.add_vertex(i);
         }
-        let mut id = graph.add_vertex(500);
+        let id = graph.add_vertex(500);
         b.iter(|| {
             let _k = *graph.fetch(&id).unwrap();
         })
@@ -1261,7 +1261,7 @@ fn bench_others(c: &mut Criterion) {
         for i in 1..1000 {
             graph.add_vertex(i);
         }
-        let mut id = graph.add_vertex(1000);
+        let id = graph.add_vertex(1000);
         b.iter(|| {
             let _k = *graph.fetch(&id).unwrap();
         })
@@ -1284,7 +1284,7 @@ fn bench_others(c: &mut Criterion) {
         for i in 1..10 {
             graph.add_vertex(i);
         }
-        let mut id = graph.add_vertex(10);
+        let id = graph.add_vertex(10);
         b.iter(|| {
             let _v = graph.fetch_mut(&id).unwrap();
         })
@@ -1294,7 +1294,7 @@ fn bench_others(c: &mut Criterion) {
         for i in 1..100 {
             graph.add_vertex(i);
         }
-        let mut id = graph.add_vertex(100);
+        let id = graph.add_vertex(100);
         b.iter(|| {
             let _v = graph.fetch_mut(&id).unwrap();
         })
@@ -1304,7 +1304,7 @@ fn bench_others(c: &mut Criterion) {
         for i in 1..500 {
             graph.add_vertex(i);
         }
-        let mut id = graph.add_vertex(500);
+        let id = graph.add_vertex(500);
         b.iter(|| {
             let _v = graph.fetch_mut(&id).unwrap();
         })
@@ -1314,7 +1314,7 @@ fn bench_others(c: &mut Criterion) {
         for i in 1..1000 {
             graph.add_vertex(i);
         }
-        let mut id = graph.add_vertex(1000);
+        let id = graph.add_vertex(1000);
         b.iter(|| {
             let _v = graph.fetch_mut(&id).unwrap();
         })

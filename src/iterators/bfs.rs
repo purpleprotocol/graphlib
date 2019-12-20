@@ -80,7 +80,7 @@ impl<'a, T> Iterator for Bfs<'a, T> {
                 // Move to next root if possible and yield it.
                 if self.queue.is_empty() {
                     if let Some(next_root) = self.roots_stack.pop() {
-                        next_ptr = Some(next_root.clone());
+                        next_ptr = Some(next_root);
                     } else {
                         // Break execution if there are no more roots
                         return None;

@@ -1,6 +1,6 @@
 // Copyright 2019 Chakrapani Gautam
 
-use crate::edge::Edge;
+
 use crate::graph::{Graph, GraphErr};
 use crate::iterators::vertices::VertexIter;
 use crate::vertex_id::VertexId;
@@ -98,7 +98,7 @@ impl<'a, T> Dijkstra<'a, T> {
             let mut curr_vert = Some(vert);
             self.iterator.clear();
 
-            while !curr_vert.is_none() {
+            while curr_vert.is_some() {
                 self.iterator.push(*curr_vert.unwrap());
 
                 match self.previous.get(curr_vert.unwrap()) {
@@ -149,7 +149,7 @@ impl<'a, T> Dijkstra<'a, T> {
 
             for neighbour in self.iterable.out_neighbors(&vert_meta.id) {
                 if !visited.contains(&neighbour) {
-                    let mut alt_dist = self.distances.get(&vert_meta.id).unwrap().clone();
+                    let mut alt_dist = *self.distances.get(&vert_meta.id).unwrap();
 
                     if let Some(w) = self.iterable.weight(&vert_meta.id, &neighbour) {
                         alt_dist += w;
@@ -311,7 +311,7 @@ mod tests {
         assert_eq!(iterator.get_distance(&v_c).unwrap(), 0.0);
         assert_eq!(iterator.get_distance(&v_d).unwrap(), 0.1);
         assert_eq!(iterator.get_distance(&v_e).unwrap(), 0.5);
-        assert_eq!(iterator.get_distance(&v_f).unwrap(), 0.90000004);
+        assert_eq!(iterator.get_distance(&v_f).unwrap(), 0.900_000_04);
         // Ugh! I wish there was something like `assert_approx_eq!()`. Too lazy to write on my own.
 
         assert_eq!(iterator.get_path_to(&v_a).unwrap().count(), 4);
