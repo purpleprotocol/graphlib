@@ -5,6 +5,7 @@ mod dfs;
 mod dijkstra;
 mod topo;
 mod vertices;
+mod owning_iterator;
 
 pub use bfs::*;
 pub use dfs::*;
