@@ -38,7 +38,7 @@ assert_eq!(graph.edge_count(), 0);
 In `Cargo.toml`:
 ```toml
 [dependencies]
-graphlib = {version = "*", features = ["no_std"]}
+graphlib = { version = "*", features = ["no_std"] }
 ```
 
 ### Contributing
