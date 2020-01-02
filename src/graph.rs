@@ -1227,13 +1227,6 @@ impl<T> Graph<T> {
     /// let v4 = graph.add_vertex(4);
     /// let v5 = graph.add_vertex(5);
     /// let v6 = graph.add_vertex(6);
-    /// 
-    /// println!("V1: {:?}", &v1);
-    /// println!("V2: {:?}", &v2);
-    /// println!("V3: {:?}", &v3);
-    /// println!("V4: {:?}", &v4);
-    /// println!("V5: {:?}", &v5);
-    /// println!("V6: {:?}", &v6);
     ///
     /// graph.add_edge(&v1, &v2).unwrap();
     /// graph.add_edge(&v2, &v3).unwrap();
@@ -1244,15 +1237,10 @@ impl<T> Graph<T> {
     ///
     /// let mut dijkstra = graph.dijkstra(&v1, &v4);
     ///
-    /// println!("1");
     /// assert_eq!(dijkstra.next(), Some(&v1));
-    /// println!("2");
     /// assert_eq!(dijkstra.next(), Some(&v2));
-    /// println!("3");
     /// assert_eq!(dijkstra.next(), Some(&v3));
-    /// println!("4");
     /// assert_eq!(dijkstra.next(), Some(&v4));
-    /// println!("5");
     /// assert_eq!(dijkstra.next(), None);
     /// ```
     pub fn dijkstra<'a>(&'a self, src: &'a VertexId, dest: &'a VertexId) -> VertexIter<'a> {
