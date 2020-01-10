@@ -4,7 +4,6 @@
 extern crate alloc;
 #[cfg(feature = "no_std")]
 use alloc::boxed::Box;
-#[cfg(not(feature = "no_std"))]
 
 /// Generic values Iterator.
 pub struct ValuesIter<'a, T>(pub(crate) Box<dyn 'a + Iterator<Item = &'a T>>);
