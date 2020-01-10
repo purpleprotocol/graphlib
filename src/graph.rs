@@ -1255,6 +1255,33 @@ impl<T> Graph<T> {
         }
     }
 
+    /// Returns an iterator over the values of the vertices 
+    /// placed in the graph.
+    /// 
+    /// ## Example
+    /// ```rust
+    /// #[macro_use] extern crate graphlib;
+    /// use graphlib::Graph;
+    /// use std::collections::HashSet;
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    ///
+    /// let v1 = graph.add_vertex(1);
+    /// let v2 = graph.add_vertex(2);
+    /// let v3 = graph.add_vertex(3);
+    ///
+    /// let mut values = graph.values();
+    ///
+    /// assert!(set![&1, &2, &3] == values.collect());
+    /// ```
+    pub fn values(&self) -> ValuesIter<'_, T> {
+        let iter = self.vertices
+            .values()
+            .map(|(v, _)| v);
+
+        ValuesIter(Box::new(iter))
+    }
+
     #[cfg(feature = "dot")]
     /// Creates a file with the dot representation of the graph.
     /// This method requires the `dot` feature.
