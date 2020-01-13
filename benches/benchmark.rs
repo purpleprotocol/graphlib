@@ -1073,6 +1073,44 @@ fn bench_others(c: &mut Criterion) {
             }
         })
     });
+    c.bench_function("add_edge_cycle_check_10", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            let mut v1 = graph.add_vertex(0);
+
+            for i in 1..=10 {
+                let v2 = graph.add_vertex(i);
+                graph.add_edge_check_cycle(&v1, &v2);
+                v1 = v2.clone();
+            }
+        })
+    });
+
+    c.bench_function("add_edge_cycle_check_100", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            let mut v1 = graph.add_vertex(0);
+
+            for i in 1..=100 {
+                let v2 = graph.add_vertex(i);
+                graph.add_edge_check_cycle(&v1, &v2);
+                v1 = v2.clone();
+            }
+        })
+    });
+    #[cfg(feature = "sbench")]
+    c.bench_function("add_edge_cycle_check_m", |b| {
+        let mut graph: Graph<usize> = Graph::new();
+        b.iter(|| {
+            let mut v1 = graph.add_vertex(0);
+
+            for i in 1..=10_000_000 {
+                let v2 = graph.add_vertex(i);
+                graph.add_edge_check_cycle(&v1, &v2);
+                v1 = v2.clone();
+            }
+        })
+    });
     c.bench_function("add_vertex_10", |b| {
         let mut graph: Graph<usize> = Graph::new();
         b.iter(|| {
