@@ -47,6 +47,10 @@ pub enum GraphErr {
     /// The given weight is invalid
     InvalidWeight,
 
+    /// The operation cannot be performed as it will
+    /// create a cycle in the graph.
+    CycleError,
+
     #[cfg(feature = "dot")]
     /// Could not render .dot file
     CouldNotRender,
@@ -292,7 +296,41 @@ impl<T> Graph<T> {
             return Ok(());
         }
 
-        self.do_add_edge(a, b, 0.0)
+        self.do_add_edge(a, b, 0.0, false)
+    }
+
+    /// Attempts to place a new edge in the graph, checking if the specified
+    /// edge will create a cycle in the graph. If it does, this operation will fail.
+    /// 
+    /// Note that this operation has a bigger performance hit than `Graph::add_edge()`.
+    /// 
+    /// /// ## Example
+    /// ```rust
+    /// use graphlib::{Graph, GraphErr, VertexId};
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    ///
+    /// // Id of vertex that is not place in the graph
+    /// let id = VertexId::random();
+    ///
+    /// let v1 = graph.add_vertex(1);
+    /// let v2 = graph.add_vertex(2);
+    ///
+    /// // Adding an edge is idempotent
+    /// graph.add_edge_check_cycle(&v1, &v2);
+    /// graph.add_edge_check_cycle(&v1, &v2);
+    /// graph.add_edge_check_cycle(&v1, &v2);
+    ///
+    /// // Fails on adding an edge which creates
+    /// // a cycle in the graph.
+    /// assert_eq!(graph.add_edge_check_cycle(&v2, &v1), Err(GraphErr::CycleError));
+    /// ```
+    pub fn add_edge_check_cycle(&mut self, a: &VertexId, b: &VertexId) -> Result<(), GraphErr> {
+        if self.has_edge(a, b) {
+            return Ok(());
+        }
+
+        self.do_add_edge(a, b, 0.0, true)
     }
 
     /// Attempts to place a new edge in the graph.
@@ -330,7 +368,7 @@ impl<T> Graph<T> {
             return Err(GraphErr::InvalidWeight);
         }
 
-        self.do_add_edge(a, b, weight)
+        self.do_add_edge(a, b, weight, false)
     }
 
     /// Returns the weight of the specified edge
@@ -1454,7 +1492,7 @@ impl<T> Graph<T> {
         }
     }
 
-    fn do_add_edge(&mut self, a: &VertexId, b: &VertexId, weight: f32) -> Result<(), GraphErr> {
+    fn do_add_edge(&mut self, a: &VertexId, b: &VertexId, weight: f32, check_cycle: bool) -> Result<(), GraphErr> {
         let id_ptr1 = if self.vertices.get(a).is_some() {
             *a
         } else {
@@ -1497,10 +1535,33 @@ impl<T> Graph<T> {
         }
 
         // Remove outbound vertex from roots
-        self.roots.remove(&b);
+        let was_root = self.roots.remove(&b);
 
         // Remove inbound vertex from tips
-        self.tips.remove(&a);
+        let was_tip = self.tips.remove(&a);
+
+        let mut is_cyclic = false;
+
+        if check_cycle {
+            let mut dfs = Dfs::new(&self);
+            is_cyclic = dfs.is_cyclic();
+        }
+
+        // Roll-back changes if cycle check succeeds
+        if is_cyclic {
+            // Remove from edge table
+            self.remove_edge(a, b);
+
+            if was_root {
+                self.roots.insert(b.clone());
+            }
+
+            if was_tip {
+                self.tips.insert(a.clone());
+            }
+
+            return Err(GraphErr::CycleError);
+        }
 
         Ok(())
     }
@@ -1697,5 +1758,34 @@ mod tests {
                 panic!("graph and clone of graph are not equal!");
             }
         }
+    }
+
+    #[test]
+    fn test_add_edge_cycle_check() {
+        let mut graph: Graph<usize> = Graph::new();
+    
+        // Id of vertex that is not place in the graph
+        let id = VertexId::random();
+    
+        let v1 = graph.add_vertex(1);
+        let v2 = graph.add_vertex(2);
+    
+        // Adding an edge is idempotent
+        graph.add_edge_check_cycle(&v1, &v2).unwrap();
+        graph.add_edge_check_cycle(&v1, &v2).unwrap();
+        graph.add_edge_check_cycle(&v1, &v2).unwrap();
+
+        let mut graph2 = graph.clone();
+    
+        // Fails on adding an edge which creates
+        // a cycle in the graph.
+        assert_eq!(graph2.add_edge_check_cycle(&v2, &v1), Err(GraphErr::CycleError));
+
+        // Check that the graph state has rolled back
+        assert_eq!(graph.edges, graph2.edges);
+        assert_eq!(graph.roots, graph2.roots);
+        assert_eq!(graph.tips, graph2.tips);
+        assert_eq!(graph.inbound_table, graph2.inbound_table);
+        assert_eq!(graph.outbound_table, graph2.outbound_table);
     }
 }
