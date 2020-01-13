@@ -1322,7 +1322,7 @@ impl<T> Graph<T> {
 
     #[cfg(feature = "dot")]
     /// Creates a file with the dot representation of the graph.
-    /// This method requires the `dot` feature.
+    /// This method requires the `dot` crate feature.
     ///
     /// ## Example
     /// ```rust
@@ -1370,6 +1370,8 @@ impl<T> Graph<T> {
 
     #[cfg(feature = "dot")]
     /// Labels the vertex with the given id. Returns the old label if successful.
+    /// 
+    /// This method requires the `dot` crate feature.
     ///
     /// ## Example
     /// ```rust
@@ -1403,6 +1405,8 @@ impl<T> Graph<T> {
 
     #[cfg(feature = "dot")]
     /// Retrieves the label of the vertex with the given id.
+    /// 
+    /// This method requires the `dot` crate feature.
     ///
     /// This function will return a default label if no label is set. Returns
     /// `None` if there is no vertex associated with the given id in the graph.
@@ -1437,6 +1441,8 @@ impl<T> Graph<T> {
 
     #[cfg(feature = "dot")]
     /// Maps each label that is placed on a vertex to a new label.
+    /// 
+    /// This method requires the `dot` crate feature.
     ///
     /// ```rust
     /// use std::collections::HashMap;
