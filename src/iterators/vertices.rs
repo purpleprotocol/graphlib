@@ -7,8 +7,6 @@ use core::fmt::Debug;
 extern crate alloc;
 #[cfg(feature = "no_std")]
 use alloc::boxed::Box;
-#[cfg(feature = "no_std")]
-use core::fmt::Debug;
 #[cfg(not(feature = "no_std"))]
 use std::fmt::Debug;
 

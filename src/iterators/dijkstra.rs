@@ -20,7 +20,9 @@ use std::{
 #[cfg(feature = "no_std")]
 extern crate alloc;
 #[cfg(feature = "no_std")]
-use alloc::collections::binary_heap::{BinaryHeap, VecDeque};
+use alloc::boxed::Box;
+#[cfg(feature = "no_std")]
+use alloc::collections::{binary_heap::BinaryHeap, vec_deque::VecDeque};
 
 #[cfg(feature = "no_std")]
 use core::{cmp::Ordering, f32, fmt::Debug, iter};

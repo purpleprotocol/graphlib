@@ -15,10 +15,10 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 
 #[cfg(feature = "no_std")]
-use alloc::marker::PhantomData;
+use core::marker::PhantomData;
 
 #[cfg(feature = "no_std")]
-use alloc::mem;
+use core::mem;
 
 #[cfg(not(feature = "no_std"))]
 use std::mem;

@@ -6,8 +6,6 @@ use crate::vertex_id::VertexId;
 use hashbrown::HashMap;
 
 #[cfg(feature = "no_std")]
-extern crate alloc;
-#[cfg(feature = "no_std")]
 use alloc::vec::Vec;
 
 #[cfg(feature = "no_std")]

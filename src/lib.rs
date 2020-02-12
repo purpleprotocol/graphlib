@@ -70,3 +70,7 @@ pub(crate) fn gen_bytes() -> [u8; 16] {
         &mut IsaacRng::seed_from_u64(SEED.fetch_add(1, Ordering::Relaxed) as u64),
     )))
 }
+
+#[cfg(feature = "no_std")]
+#[macro_use]
+extern crate alloc;
