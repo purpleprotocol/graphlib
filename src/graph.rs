@@ -301,9 +301,9 @@ impl<T> Graph<T> {
 
     /// Attempts to place a new edge in the graph, checking if the specified
     /// edge will create a cycle in the graph. If it does, this operation will fail.
-    /// 
+    ///
     /// Note that this operation has a bigger performance hit than `Graph::add_edge()`.
-    /// 
+    ///
     /// /// ## Example
     /// ```rust
     /// use graphlib::{Graph, GraphErr, VertexId};
@@ -1293,9 +1293,9 @@ impl<T> Graph<T> {
         }
     }
 
-    /// Returns an iterator over the values of the vertices 
+    /// Returns an iterator over the values of the vertices
     /// placed in the graph.
-    /// 
+    ///
     /// ## Example
     /// ```rust
     /// #[macro_use] extern crate graphlib;
@@ -1313,9 +1313,7 @@ impl<T> Graph<T> {
     /// assert!(set![&1, &2, &3] == values.collect());
     /// ```
     pub fn values(&self) -> ValuesIter<'_, T> {
-        let iter = self.vertices
-            .values()
-            .map(|(v, _)| v);
+        let iter = self.vertices.values().map(|(v, _)| v);
 
         ValuesIter(Box::new(iter))
     }
@@ -1370,7 +1368,7 @@ impl<T> Graph<T> {
 
     #[cfg(feature = "dot")]
     /// Labels the vertex with the given id. Returns the old label if successful.
-    /// 
+    ///
     /// This method requires the `dot` crate feature.
     ///
     /// ## Example
@@ -1405,7 +1403,7 @@ impl<T> Graph<T> {
 
     #[cfg(feature = "dot")]
     /// Retrieves the label of the vertex with the given id.
-    /// 
+    ///
     /// This method requires the `dot` crate feature.
     ///
     /// This function will return a default label if no label is set. Returns
@@ -1441,7 +1439,7 @@ impl<T> Graph<T> {
 
     #[cfg(feature = "dot")]
     /// Maps each label that is placed on a vertex to a new label.
-    /// 
+    ///
     /// This method requires the `dot` crate feature.
     ///
     /// ```rust
@@ -1498,7 +1496,13 @@ impl<T> Graph<T> {
         }
     }
 
-    fn do_add_edge(&mut self, a: &VertexId, b: &VertexId, weight: f32, check_cycle: bool) -> Result<(), GraphErr> {
+    fn do_add_edge(
+        &mut self,
+        a: &VertexId,
+        b: &VertexId,
+        weight: f32,
+        check_cycle: bool,
+    ) -> Result<(), GraphErr> {
         let id_ptr1 = if self.vertices.get(a).is_some() {
             *a
         } else {
@@ -1769,23 +1773,26 @@ mod tests {
     #[test]
     fn test_add_edge_cycle_check() {
         let mut graph: Graph<usize> = Graph::new();
-    
+
         // Id of vertex that is not place in the graph
         let id = VertexId::random();
-    
+
         let v1 = graph.add_vertex(1);
         let v2 = graph.add_vertex(2);
-    
+
         // Adding an edge is idempotent
         graph.add_edge_check_cycle(&v1, &v2).unwrap();
         graph.add_edge_check_cycle(&v1, &v2).unwrap();
         graph.add_edge_check_cycle(&v1, &v2).unwrap();
 
         let mut graph2 = graph.clone();
-    
+
         // Fails on adding an edge which creates
         // a cycle in the graph.
-        assert_eq!(graph2.add_edge_check_cycle(&v2, &v1), Err(GraphErr::CycleError));
+        assert_eq!(
+            graph2.add_edge_check_cycle(&v2, &v1),
+            Err(GraphErr::CycleError)
+        );
 
         // Check that the graph state has rolled back
         assert_eq!(graph.edges, graph2.edges);

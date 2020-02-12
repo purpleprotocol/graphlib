@@ -7,10 +7,10 @@ use core::fmt::Debug;
 extern crate alloc;
 #[cfg(feature = "no_std")]
 use alloc::boxed::Box;
-#[cfg(not(feature = "no_std"))]
-use std::fmt::Debug;
 #[cfg(feature = "no_std")]
 use core::fmt::Debug;
+#[cfg(not(feature = "no_std"))]
+use std::fmt::Debug;
 
 pub(crate) trait MergedTrait<'a>: Iterator<Item = &'a VertexId> + Debug {}
 

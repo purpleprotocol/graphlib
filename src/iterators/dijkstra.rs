@@ -1,15 +1,21 @@
 // Copyright 2019 Chakrapani Gautam
 
 use crate::graph::{Graph, GraphErr};
-use crate::iterators::vertices::VertexIter;
 use crate::iterators::owning_iterator::OwningIterator;
+use crate::iterators::vertices::VertexIter;
 use crate::vertex_id::VertexId;
 
 use hashbrown::HashMap;
 use hashbrown::HashSet;
 
 #[cfg(not(feature = "no_std"))]
-use std::{cmp::Ordering, collections::{BinaryHeap, VecDeque}, f32, fmt::Debug, iter};
+use std::{
+    cmp::Ordering,
+    collections::{BinaryHeap, VecDeque},
+    f32,
+    fmt::Debug,
+    iter,
+};
 
 #[cfg(feature = "no_std")]
 extern crate alloc;
