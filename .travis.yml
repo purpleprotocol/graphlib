@@ -15,7 +15,7 @@ git:
   depth: 10
 
 before_script:
-  - chmod +x benches-compare.sh
+  - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then chmod +x benches-compare.sh; fi
 
 script:
   - cargo build --verbose --all
@@ -30,4 +30,4 @@ script:
     fi
 
 after_script:
-  - ./benches-compare.sh
+  - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then chmod +x benches-compare.sh; fi
