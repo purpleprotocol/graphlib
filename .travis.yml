@@ -15,17 +15,19 @@ git:
   depth: 10
 
 before_script:
-  - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then chmod +x benches-compare.sh; fi
+  - chmod +x benches-compare.sh
 
 script:
+  - cargo build --verbose --all
   - cargo build --verbose --all --features "dot"
   - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
     cargo +nightly build --features "no_std dot" --verbose --all;
     fi
+  - cargo test --verbose --all
   - cargo test --verbose --all --features "dot"
   - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
       cargo +nightly test --features "no_std dot" --verbose --all;
     fi
 
 after_script:
-  - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; ./benches-compare.sh; fi
+  - ./benches-compare.sh
