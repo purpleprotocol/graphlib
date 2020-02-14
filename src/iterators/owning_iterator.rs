@@ -15,10 +15,10 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 
 #[cfg(feature = "no_std")]
-use alloc::marker::PhantomData;
+use core::marker::PhantomData;
 
 #[cfg(feature = "no_std")]
-use alloc::mem;
+use core::mem;
 
 #[cfg(not(feature = "no_std"))]
 use std::mem;
@@ -61,7 +61,7 @@ impl<'a> Iterator for OwningIterator<'a> {
             // Since we cannot annotate the lifetime 'a to &mut self
             // because of the Iterator trait's signature, this seems
             // the only way to make the compiler happy.
-            // 
+            //
             // TODO: If you can make this work with safe Rust, please do.
             unsafe {
                 let ptr = &self.iterable[last_idx] as *const VertexId;
@@ -78,7 +78,11 @@ mod tests {
 
     #[test]
     fn it_yields_correct_vertex_ids() {
-        let ids: VecDeque<VertexId> = vec![VertexId::random(), VertexId::random(), VertexId::random()].iter().cloned().collect();
+        let ids: VecDeque<VertexId> =
+            vec![VertexId::random(), VertexId::random(), VertexId::random()]
+                .iter()
+                .cloned()
+                .collect();
         let mut iter = OwningIterator::new(ids.clone());
 
         assert_eq!(iter.next(), Some(&ids[0]));
