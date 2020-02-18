@@ -304,7 +304,7 @@ impl<T> Graph<T> {
     ///
     /// Note that this operation has a bigger performance hit than `Graph::add_edge()`.
     ///
-    /// /// ## Example
+    /// ## Example
     /// ```rust
     /// use graphlib::{Graph, GraphErr, VertexId};
     ///
