@@ -14,24 +14,21 @@ readme = "README.md"
 travis-ci = { repository = "purpleprotocol/graphlib", branch = "master" }
 
 [dependencies]
-rand = { version = "0.7.2", default-features = false }
-rand_core = "0.5.1"
-rand_isaac = "0.2.0"
-hex = "0.4.0"
-hashbrown = { version = "0.6.3", features = ["rayon"] }
-dot = {version = "0.1.4", optional=true}
+rand = { version = "0.7.3", default-features = false }
+rand_core = { version = "0.5.1", default-features = false } 
+rand_isaac = { version = "0.2.0", default-features = false }
+hex = { version = "0.4.0", default-features = false }
+hashbrown = { version = "0.6.3", default-features = false, features = ["inline-more", "ahash"] }
+dot = { version = "0.1.4", optional = true }
 
 [dev-dependencies]
 criterion = "0.3.0"
-# Due to criterion dependency on std
-rand = "0.7.2"
 
 [[bench]]
 name = "benchmark"
 harness = false
 
 [features]
-
 default = []
 # use `cargo bench --features sbench` only if you want benchmarks with 10 million
 # iterations (may fail on some systems)
