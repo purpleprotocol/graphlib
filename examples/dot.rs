@@ -16,12 +16,12 @@ pub fn main() {
 
     #[cfg(feature = "dot")]
     {
-        graph.label_vertex(&v1, "label: test1").unwrap();
-        graph.label_vertex(&v2, "label: test2").unwrap();
-        graph.label_vertex(&v3, "label: test3").unwrap();
-        graph.label_vertex(&v4, "label: test4").unwrap();
-        graph.label_vertex(&v5, "label: test5").unwrap();
-        graph.label_vertex(&v6, "label: test6").unwrap();
+        graph.add_vertex_label(&v1, "label: test1").unwrap();
+        graph.add_vertex_label(&v2, "label: test2").unwrap();
+        graph.add_vertex_label(&v3, "label: test3").unwrap();
+        graph.add_vertex_label(&v4, "label: test4").unwrap();
+        graph.add_vertex_label(&v5, "label: test5").unwrap();
+        graph.add_vertex_label(&v6, "label: test6").unwrap();
     }
 
     graph.add_edge(&v1, &v2).unwrap();

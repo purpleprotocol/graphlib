@@ -84,7 +84,7 @@ pub struct Graph<T> {
 
     #[cfg(feature = "dot")]
     /// Mapping between vertices and labels
-    labels: HashMap<VertexId, String>,
+    vertex_labels: HashMap<VertexId, String>,
 }
 
 impl<T> Graph<T> {
@@ -109,7 +109,7 @@ impl<T> Graph<T> {
             outbound_table: HashMap::new(),
 
             #[cfg(feature = "dot")]
-            labels: HashMap::new(),
+            vertex_labels: HashMap::new(),
         }
     }
 
@@ -137,7 +137,7 @@ impl<T> Graph<T> {
             outbound_table: HashMap::with_capacity(capacity),
 
             #[cfg(feature = "dot")]
-            labels: HashMap::with_capacity(capacity),
+            vertex_labels: HashMap::with_capacity(capacity),
         }
     }
 
@@ -201,7 +201,7 @@ impl<T> Graph<T> {
         self.inbound_table.reserve(additional);
 
         #[cfg(feature = "dot")]
-        self.labels.reserve(additional);
+        self.vertex_labels.reserve(additional);
     }
 
     /// Shrinks the capacity of the graph as much as possible.
@@ -228,7 +228,7 @@ impl<T> Graph<T> {
         self.inbound_table.shrink_to_fit();
 
         #[cfg(feature = "dot")]
-        self.labels.shrink_to_fit();
+        self.vertex_labels.shrink_to_fit();
 
         // Calculate additional value for edges vector
         // such that it is always n^2 where n is the
@@ -773,7 +773,7 @@ impl<T> Graph<T> {
 
         #[cfg(feature = "dot")]
         {
-            graph.labels = self.labels.clone();
+            graph.vertex_labels = self.vertex_labels.clone();
         }
 
         graph
@@ -1366,17 +1366,19 @@ impl<T> Graph<T> {
     /// let v2 = graph.add_vertex(1);
     /// let v3 = graph.add_vertex(2);
     ///
-    /// assert!(graph.label_vertex(&v1, "V1").is_ok());
-    /// assert!(graph.label_vertex(&v2, "V2").is_ok());
-    /// assert!(graph.label_vertex(&v3, "V3").is_ok());
-    /// assert!(graph.label_vertex(&random_id, "will fail").is_err());
+    /// assert!(graph.add_vertex_label(&v1, "V1").is_ok());
+    /// assert!(graph.add_vertex_label(&v2, "V2").is_ok());
+    /// assert!(graph.add_vertex_label(&v3, "V3").is_ok());
+    /// assert!(graph.add_vertex_label(&random_id, "will fail").is_err());
     /// ```
-    pub fn label_vertex(&mut self, vertex_id: &VertexId, label: &str) -> Result<Option<String>, GraphErr> {
+    pub fn add_vertex_label(&mut self, vertex_id: &VertexId, label: &str)
+        -> Result<Option<String>, GraphErr>
+    {
         if self.vertices.get(vertex_id).is_none() {
             return Err(GraphErr::NoSuchVertex);
         }
 
-        let old_label = self.labels.insert(vertex_id.clone(), label.to_owned());
+        let old_label = self.vertex_labels.insert(vertex_id.clone(), label.to_owned());
         Ok(old_label)
     }
 
@@ -1386,8 +1388,8 @@ impl<T> Graph<T> {
     /// This method requires the `dot` crate feature.
     ///
     /// Returns `None` if there is no vertex associated with the given id in the graph.
-    pub fn label(&self, vertex_id: &VertexId) -> Option<String> {
-        self.labels.get(vertex_id).cloned()
+    pub fn vertex_label(&self, vertex_id: &VertexId) -> Option<&String> {
+        self.vertex_labels.get(vertex_id)
     }
 
     #[cfg(feature = "dot")]
@@ -1408,17 +1410,17 @@ impl<T> Graph<T> {
     /// let v3 = graph.add_vertex(2);
     /// let v4 = graph.add_vertex(3);
     ///
-    /// assert!(graph.label_vertex(&v1, &format!("V{}", vertex_id)).is_ok());
+    /// assert!(graph.add_vertex_label(&v1, &format!("V{}", vertex_id)).is_ok());
     /// vertex_id += 1;
     ///
-    /// assert!(graph.label_vertex(&v2, &format!("V{}", vertex_id)).is_ok());
+    /// assert!(graph.add_vertex_label(&v2, &format!("V{}", vertex_id)).is_ok());
     /// vertex_id += 1;
     ///
-    /// assert!(graph.label_vertex(&v3, &format!("V{}", vertex_id)).is_ok());
+    /// assert!(graph.add_vertex_label(&v3, &format!("V{}", vertex_id)).is_ok());
     ///
-    /// assert_eq!(graph.label(&v1).unwrap(), "V1");
-    /// assert_eq!(graph.label(&v2).unwrap(), "V2");
-    /// assert_eq!(graph.label(&v3).unwrap(), "V3");
+    /// assert_eq!(graph.vertex_label(&v1).unwrap(), "V1");
+    /// assert_eq!(graph.vertex_label(&v2).unwrap(), "V2");
+    /// assert_eq!(graph.vertex_label(&v3).unwrap(), "V3");
     ///
     /// let new_labels: HashMap<VertexId, String> = vec![v1.clone(), v2.clone(), v3.clone(), v4.clone()]
     ///     .iter()
@@ -1430,16 +1432,16 @@ impl<T> Graph<T> {
     ///     })
     ///     .collect();
     ///
-    /// graph.map_labels(|id, _old_label| new_labels.get(id).unwrap().clone());
+    /// graph.map_vertex_labels(|id, _old_label| new_labels.get(id).unwrap().clone());
     ///
-    /// assert_eq!(graph.label(&v1).unwrap(), "V4");
-    /// assert_eq!(graph.label(&v2).unwrap(), "V5");
-    /// assert_eq!(graph.label(&v3).unwrap(), "V6");
-    /// assert_eq!(graph.label(&v4).unwrap(), "V7");
+    /// assert_eq!(graph.vertex_label(&v1).unwrap(), "V4");
+    /// assert_eq!(graph.vertex_label(&v2).unwrap(), "V5");
+    /// assert_eq!(graph.vertex_label(&v3).unwrap(), "V6");
+    /// assert_eq!(graph.vertex_label(&v4).unwrap(), "V7");
     /// ```
-    pub fn map_labels(&mut self, mut fun: impl FnMut(&VertexId, Option<&str>) -> String) {
+    pub fn map_vertex_labels(&mut self, mut fun: impl FnMut(&VertexId, Option<&str>) -> String) {
         for (id, _) in self.vertices.iter() {
-            self.labels.entry(*id)
+            self.vertex_labels.entry(*id)
                 .and_modify(|e| { *e = fun(id, Some(e)); })
                 .or_insert_with(|| fun(id, None));
         }

@@ -48,7 +48,8 @@ impl<'a, T> dot::Labeller<'a, Nd, Ed<'a>> for DotGraph<'a, T> {
     }
 
     fn node_label<'b>(&'b self, n: &Nd) -> dot::LabelText<'b> {
-        let label = self.graph.label(n)
+        let label = self.graph.vertex_label(n)
+            .cloned()
             .unwrap_or_else(|| String::new());
         dot::LabelText::label(Cow::Owned(label))
     }
