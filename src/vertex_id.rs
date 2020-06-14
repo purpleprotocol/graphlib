@@ -20,4 +20,8 @@ impl VertexId {
     pub fn random() -> VertexId {
         VertexId(super::gen_bytes())
     }
+
+    pub fn bytes(&self) -> &[u8; 16] {
+        &self.0
+    }
 }

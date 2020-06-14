@@ -59,11 +59,6 @@ pub enum GraphErr {
     /// The name of the graph is invalid. Check [this](https://docs.rs/dot/0.1.1/dot/struct.Id.html#method.new)
     /// out for more information.
     InvalidGraphName,
-
-    #[cfg(feature = "dot")]
-    /// The name of the given label is invalid. Check [this](https://docs.rs/dot/0.1.1/dot/struct.Id.html#method.new)
-    /// out for more information.
-    InvalidLabel,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -1351,19 +1346,8 @@ impl<T> Graph<T> {
         graph_name: &str,
         output: &mut impl ::std::io::Write,
     ) -> Result<(), GraphErr> {
-        let edges: Vec<(_, _)> = self
-            .edges
-            .iter()
-            .map(|(w, _)| {
-                let inbound = w.inbound();
-                let outbound = w.outbound();
-
-                (self.label(inbound).unwrap(), self.label(outbound).unwrap())
-            })
-            .collect();
-
-        let edges = crate::dot::Edges::new(edges, graph_name)?;
-        dot::render(&edges, output).map_err(|_| GraphErr::CouldNotRender)
+        let graph = crate::dot::DotGraph::new(&self, graph_name)?;
+        dot::render(&graph, output).map_err(|_| GraphErr::CouldNotRender)
     }
 
     #[cfg(feature = "dot")]
@@ -1387,17 +1371,12 @@ impl<T> Graph<T> {
     /// assert!(graph.label_vertex(&v3, "V3").is_ok());
     /// assert!(graph.label_vertex(&random_id, "will fail").is_err());
     /// ```
-    pub fn label_vertex(&mut self, vertex_id: &VertexId, label: &str) -> Result<String, GraphErr> {
-        // Check label validity
-        let _ = dot::Id::new(label.to_owned()).map_err(|_| GraphErr::InvalidLabel)?;
-
+    pub fn label_vertex(&mut self, vertex_id: &VertexId, label: &str) -> Result<Option<String>, GraphErr> {
         if self.vertices.get(vertex_id).is_none() {
             return Err(GraphErr::NoSuchVertex);
         }
 
-        let old_label = self.label(vertex_id).unwrap();
-        self.labels.insert(vertex_id.clone(), label.to_owned());
-
+        let old_label = self.labels.insert(vertex_id.clone(), label.to_owned());
         Ok(old_label)
     }
 
@@ -1406,34 +1385,8 @@ impl<T> Graph<T> {
     ///
     /// This method requires the `dot` crate feature.
     ///
-    /// This function will return a default label if no label is set. Returns
-    /// `None` if there is no vertex associated with the given id in the graph.
+    /// Returns `None` if there is no vertex associated with the given id in the graph.
     pub fn label(&self, vertex_id: &VertexId) -> Option<String> {
-        if self.vertices.get(vertex_id).is_none() {
-            return None;
-        }
-
-        if let Some(label) = self.labels.get(vertex_id) {
-            return Some(label.clone());
-        }
-
-        let bytes = super::gen_bytes();
-
-        // Take only 8 bytes out of 16
-        let to_encode: Vec<u8> = bytes.iter().take(8).cloned().collect();
-
-        let encoded = hex::encode(&to_encode);
-        let label = format!("N_{}", encoded);
-        debug_assert!(dot::Id::new(label.to_owned()).is_ok());
-
-        unsafe {
-            let labels_ptr = mem::transmute::<
-                &HashMap<VertexId, String>,
-                &mut HashMap<VertexId, String>,
-            >(&self.labels);
-            labels_ptr.insert(vertex_id.clone(), label);
-        }
-
         self.labels.get(vertex_id).cloned()
     }
 
@@ -1484,15 +1437,11 @@ impl<T> Graph<T> {
     /// assert_eq!(graph.label(&v3).unwrap(), "V6");
     /// assert_eq!(graph.label(&v4).unwrap(), "V7");
     /// ```
-    pub fn map_labels(&mut self, mut fun: impl FnMut(&VertexId, &str) -> String) {
-        // Initialize all labels
-        for (v, _) in self.vertices.iter() {
-            let _ = self.label(v);
-        }
-
-        for (id, l) in self.labels.iter_mut() {
-            let new_label = fun(id, l);
-            *l = new_label;
+    pub fn map_labels(&mut self, mut fun: impl FnMut(&VertexId, Option<&str>) -> String) {
+        for (id, _) in self.vertices.iter() {
+            self.labels.entry(*id)
+                .and_modify(|e| { *e = fun(id, Some(e)); })
+                .or_insert_with(|| fun(id, None));
         }
     }
 
