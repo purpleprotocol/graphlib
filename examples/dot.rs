@@ -30,5 +30,13 @@ pub fn main() {
     graph.add_edge(&v5, &v6).unwrap();
 
     #[cfg(feature = "dot")]
+    {
+        graph.add_edge_label(&v1, &v2, "V1&rarr;V2").unwrap();
+        graph.add_edge_label(&v3, &v1, "V3&rarr;V1").unwrap();
+        graph.add_edge_label(&v1, &v4, "V1&rarr;V4").unwrap();
+        graph.add_edge_label(&v5, &v6, "V5&rarr;V6").unwrap();
+    }
+
+    #[cfg(feature = "dot")]
     graph.to_dot("example1", &mut f).unwrap();
 }

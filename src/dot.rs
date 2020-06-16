@@ -53,6 +53,13 @@ impl<'a, T> dot::Labeller<'a, Nd, Ed<'a>> for DotGraph<'a, T> {
             .unwrap_or_else(|| String::new());
         dot::LabelText::label(Cow::Owned(label))
     }
+
+    fn edge_label<'b>(&'b self, e: &Ed) -> dot::LabelText<'b> {
+        let label = self.graph.edge_label(e.0, e.1)
+            .cloned()
+            .unwrap_or_else(|| String::new());
+        dot::LabelText::LabelStr(Cow::Owned(label))
+    }
 }
 
 
@@ -63,7 +70,9 @@ impl<'a, T> dot::GraphWalk<'a, Nd, Ed<'a>> for DotGraph<'a, T> {
     }
 
     fn edges(&'a self) -> dot::Edges<'a, Ed<'a>> {
-        self.graph.edges().collect()
+        self.graph.edges()
+            .map(|e| (e.1, e.0))
+            .collect()
     }
 
     fn source(&self, e: &Ed) -> Nd {

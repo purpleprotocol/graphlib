@@ -85,6 +85,10 @@ pub struct Graph<T> {
     #[cfg(feature = "dot")]
     /// Mapping between vertices and labels
     vertex_labels: HashMap<VertexId, String>,
+
+    #[cfg(feature = "dot")]
+    /// Mapping between edges and labels
+    edge_labels: HashMap<Edge, String>,
 }
 
 impl<T> Graph<T> {
@@ -110,6 +114,8 @@ impl<T> Graph<T> {
 
             #[cfg(feature = "dot")]
             vertex_labels: HashMap::new(),
+            #[cfg(feature = "dot")]
+            edge_labels: HashMap::new(),
         }
     }
 
@@ -138,6 +144,8 @@ impl<T> Graph<T> {
 
             #[cfg(feature = "dot")]
             vertex_labels: HashMap::with_capacity(capacity),
+            #[cfg(feature = "dot")]
+            edge_labels: HashMap::with_capacity(capacity),
         }
     }
 
@@ -202,6 +210,8 @@ impl<T> Graph<T> {
 
         #[cfg(feature = "dot")]
         self.vertex_labels.reserve(additional);
+        #[cfg(feature = "dot")]
+        self.edge_labels.reserve(additional);
     }
 
     /// Shrinks the capacity of the graph as much as possible.
@@ -229,6 +239,8 @@ impl<T> Graph<T> {
 
         #[cfg(feature = "dot")]
         self.vertex_labels.shrink_to_fit();
+        #[cfg(feature = "dot")]
+        self.edge_labels.shrink_to_fit();
 
         // Calculate additional value for edges vector
         // such that it is always n^2 where n is the
@@ -774,6 +786,7 @@ impl<T> Graph<T> {
         #[cfg(feature = "dot")]
         {
             graph.vertex_labels = self.vertex_labels.clone();
+            graph.edge_labels = self.edge_labels.clone();
         }
 
         graph
@@ -1383,6 +1396,42 @@ impl<T> Graph<T> {
     }
 
     #[cfg(feature = "dot")]
+    /// Labels the edge with between the given vertices. Returns the old label if successful.
+    ///
+    /// This method requires the `dot` crate feature.
+    ///
+    /// ## Example
+    /// ```rust
+    /// use graphlib::{Graph, VertexId};
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    /// let random_id = VertexId::random();
+    ///
+    /// let v1 = graph.add_vertex(0);
+    /// let v2 = graph.add_vertex(1);
+    /// let v3 = graph.add_vertex(2);
+    ///
+    /// graph.add_edge(&v1, &v2).unwrap();
+    /// graph.add_edge(&v3, &v1).unwrap();
+    ///
+    /// assert!(graph.add_edge_label(&v1, &v2, "V1->V2").is_ok());
+    /// assert!(graph.add_edge_label(&v3, &v1, "V3->V1").is_ok());
+    /// assert!(graph.add_edge_label(&v2, &v3, "V2->V3").is_err());
+    /// assert!(graph.add_edge_label(&v1, &v3, "V1->V3").is_err());
+    /// ```
+    pub fn add_edge_label(&mut self, a: &VertexId, b: &VertexId, label: &str)
+        -> Result<Option<String>, GraphErr>
+    {
+        if !self.has_edge(a, b) {
+            return Err(GraphErr::NoSuchEdge);
+        }
+
+        let edge = Edge::new(a.clone(), b.clone());
+        let old_label = self.edge_labels.insert(edge, label.to_owned());
+        Ok(old_label)
+    }
+
+    #[cfg(feature = "dot")]
     /// Retrieves the label of the vertex with the given id.
     ///
     /// This method requires the `dot` crate feature.
@@ -1390,6 +1439,16 @@ impl<T> Graph<T> {
     /// Returns `None` if there is no vertex associated with the given id in the graph.
     pub fn vertex_label(&self, vertex_id: &VertexId) -> Option<&String> {
         self.vertex_labels.get(vertex_id)
+    }
+
+    #[cfg(feature = "dot")]
+    /// Retrieves the label of the edge with the given vertices.
+    ///
+    /// This method requires the `dot` crate feature.
+    ///
+    /// Returns `None` if there is no edge associated with the given vertices in the graph.
+    pub fn edge_label(&self, a: &VertexId, b: &VertexId) -> Option<&String> {
+        self.edge_labels.get(&Edge::new(*a, *b))
     }
 
     #[cfg(feature = "dot")]
@@ -1444,6 +1503,55 @@ impl<T> Graph<T> {
             self.vertex_labels.entry(*id)
                 .and_modify(|e| { *e = fun(id, Some(e)); })
                 .or_insert_with(|| fun(id, None));
+        }
+    }
+
+    #[cfg(feature = "dot")]
+    /// Maps each label that is placed on an edge to a new label.
+    ///
+    /// This method requires the `dot` crate feature.
+    ///
+    /// ```rust
+    /// use std::collections::HashMap;
+    /// use graphlib::{Graph, VertexId};
+    ///
+    /// let mut graph: Graph<usize> = Graph::new();
+    /// let random_id = VertexId::random();
+    /// let mut vertex_id: usize = 1;
+    ///
+    /// let v1 = graph.add_vertex(0);
+    /// let v2 = graph.add_vertex(1);
+    /// let v3 = graph.add_vertex(2);
+    /// let v4 = graph.add_vertex(3);
+    ///
+    /// graph.add_edge(&v1, &v2).unwrap();
+    /// graph.add_edge(&v2, &v3).unwrap();
+    /// graph.add_edge(&v1, &v4).unwrap();
+    /// graph.add_edge(&v4, &v3).unwrap();
+    ///
+    /// assert!(graph.add_edge_label(&v1, &v2, &"V1->V2").is_ok());
+    /// assert!(graph.add_edge_label(&v2, &v3, &"V2->V3").is_ok());
+    /// assert!(graph.add_edge_label(&v1, &v4, &"V1->V4").is_ok());
+    /// assert!(graph.add_edge_label(&v4, &v3, &"V4->V3").is_ok());
+    /// assert!(graph.add_edge_label(&v1, &v3, &"V1->V3").is_err());
+    ///
+    /// assert_eq!(graph.edge_label(&v1, &v2).unwrap(), "V1->V2");
+    /// assert_eq!(graph.edge_label(&v2, &v3).unwrap(), "V2->V3");
+    /// assert_eq!(graph.edge_label(&v1, &v4).unwrap(), "V1->V4");
+    /// assert_eq!(graph.edge_label(&v4, &v3).unwrap(), "V4->V3");
+    ///
+    /// graph.map_edge_labels(|edge, old_label| format!("*{}*", old_label.unwrap()));
+    ///
+    /// assert_eq!(graph.edge_label(&v1, &v2).unwrap(), "*V1->V2*");
+    /// assert_eq!(graph.edge_label(&v2, &v3).unwrap(), "*V2->V3*");
+    /// assert_eq!(graph.edge_label(&v1, &v4).unwrap(), "*V1->V4*");
+    /// assert_eq!(graph.edge_label(&v4, &v3).unwrap(), "*V4->V3*");
+    /// ```
+    pub fn map_edge_labels(&mut self, mut fun: impl FnMut(&Edge, Option<&str>) -> String) {
+        for (edge, _) in self.edges.iter() {
+            self.edge_labels.entry(Edge::new(*edge.outbound(), *edge.inbound()))
+                .and_modify(|e| { *e = fun(edge, Some(e)); })
+                .or_insert_with(|| fun(edge, None));
         }
     }
 
