@@ -17,8 +17,6 @@ use std::fmt::Debug;
 
 #[cfg(feature = "no_std")]
 use core::mem;
-#[cfg(not(feature = "no_std"))]
-use std::mem;
 
 #[cfg(feature = "no_std")]
 extern crate alloc;
@@ -90,6 +88,8 @@ pub struct Graph<T> {
     /// Mapping between edges and labels
     edge_labels: HashMap<Edge, String>,
 }
+
+const DEFAULT_LABEL: &str = "";
 
 impl<T> Graph<T> {
     /// Creates a new graph.
@@ -1437,8 +1437,14 @@ impl<T> Graph<T> {
     /// This method requires the `dot` crate feature.
     ///
     /// Returns `None` if there is no vertex associated with the given id in the graph.
-    pub fn vertex_label(&self, vertex_id: &VertexId) -> Option<&String> {
+    pub fn vertex_label(&self, vertex_id: &VertexId) -> Option<&str> {
+        if !self.vertices.contains_key(vertex_id) {
+            return None;
+        }
+
         self.vertex_labels.get(vertex_id)
+            .map(|x| x.as_str())
+            .or(Some(&DEFAULT_LABEL))
     }
 
     #[cfg(feature = "dot")]
@@ -1447,8 +1453,14 @@ impl<T> Graph<T> {
     /// This method requires the `dot` crate feature.
     ///
     /// Returns `None` if there is no edge associated with the given vertices in the graph.
-    pub fn edge_label(&self, a: &VertexId, b: &VertexId) -> Option<&String> {
+    pub fn edge_label(&self, a: &VertexId, b: &VertexId) -> Option<&str> {
+        if !self.has_edge(a, b) {
+            return None;
+        }
+
         self.edge_labels.get(&Edge::new(*a, *b))
+            .map(|x| x.as_str())
+            .or(Some(&DEFAULT_LABEL))
     }
 
     #[cfg(feature = "dot")]
