@@ -1,5 +1,4 @@
-use crate::graph::Graph;
-use crate::graph::GraphErr;
+use crate::{Graph, GraphErr, VertexId};
 
 #[cfg(feature = "no_std")]
 use core::io::Write;
@@ -19,61 +18,65 @@ use core::fmt::Debug;
 #[cfg(not(feature = "no_std"))]
 use std::fmt::Debug;
 
-/*
-Bounds on types throw warnings
-type Nd<D: Clone + Debug> = D;
-type Ed<D: Clone + Debug> = (D, D);
-*/
-type Nd = String;
-type Ed = (String, String);
+type Nd = VertexId;
+type Ed<'a> = (&'a VertexId, &'a VertexId);
 
-pub(crate) struct Edges<'a> {
-    pub(crate) edges: Vec<Ed>,
-    pub(crate) graph_name: dot::Id<'a>,
+
+pub(crate) struct DotGraph<'a, T> {
+    name: dot::Id<'a>,
+    graph: &'a Graph<T>,
 }
 
-impl<'a> Edges<'a> {
-    pub fn new(edges: Vec<Ed>, graph_name: &'a str) -> Result<Edges<'a>, GraphErr> {
-        let graph_name = dot::Id::new(graph_name).map_err(|_| GraphErr::InvalidGraphName)?;
 
-        Ok(Edges { edges, graph_name })
+impl<'a, T> DotGraph<'a, T> {
+    pub fn new(graph: &'a Graph<T>, name: &'a str) -> Result<DotGraph<'a, T>, GraphErr> {
+        let name = dot::Id::new(name)
+            .map_err(|_| GraphErr::InvalidGraphName)?;
+        Ok(DotGraph { name, graph })
     }
 }
 
-impl<'a> dot::Labeller<'a, Nd, Ed> for Edges<'a> {
-    fn graph_id(&'a self) -> dot::Id {
-        dot::Id::new(self.graph_name.as_slice()).unwrap()
+
+impl<'a, T> dot::Labeller<'a, Nd, Ed<'a>> for DotGraph<'a, T> {
+    fn graph_id(&'a self) -> dot::Id<'a> {
+        dot::Id::new(self.name.as_slice()).unwrap()
     }
 
-    fn node_id(&'a self, n: &Nd) -> dot::Id {
-        dot::Id::new(n.clone()).unwrap()
+    fn node_id(&'a self, n: &Nd) -> dot::Id<'a> {
+        let hex = format!("N{}", hex::encode(n.bytes()));
+        dot::Id::new(hex).unwrap()
+    }
+
+    fn node_label<'b>(&'b self, n: &Nd) -> dot::LabelText<'b> {
+        let label = self.graph.vertex_label(n).unwrap();
+        dot::LabelText::label(Cow::Borrowed(label))
+    }
+
+    fn edge_label<'b>(&'b self, e: &Ed) -> dot::LabelText<'b> {
+        let label = self.graph.edge_label(e.0, e.1).unwrap();
+        dot::LabelText::LabelStr(Cow::Borrowed(label))
     }
 }
 
-impl<'a> dot::GraphWalk<'a, Nd, Ed> for Edges<'a> {
+
+impl<'a, T> dot::GraphWalk<'a, Nd, Ed<'a>> for DotGraph<'a, T> {
     fn nodes(&self) -> dot::Nodes<'a, Nd> {
-        let &Edges { edges: ref v, .. } = self;
-        let mut nodes = Vec::with_capacity(v.len());
-
-        for (s, t) in v.iter() {
-            nodes.push(s.clone());
-            nodes.push(t.clone());
-        }
-
+        let nodes = self.graph.vertices().cloned().collect();
         Cow::Owned(nodes)
     }
 
-    fn edges(&'a self) -> dot::Edges<'a, Ed> {
-        let &Edges {
-            edges: ref edges, ..
-        } = self;
-        Cow::Borrowed(&edges[..])
+    fn edges(&'a self) -> dot::Edges<'a, Ed<'a>> {
+        self.graph.edges()
+            .map(|e| (e.1, e.0))
+            .collect()
     }
 
     fn source(&self, e: &Ed) -> Nd {
-        e.0.clone()
+        *e.0
     }
+
     fn target(&self, e: &Ed) -> Nd {
-        e.1.clone()
+        *e.1
     }
 }
+
