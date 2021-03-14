@@ -17,7 +17,7 @@ travis-ci = { repository = "purpleprotocol/graphlib", branch = "master" }
 rand = { version = "0.7.3", default-features = false }
 rand_core = { version = "0.5.1", default-features = false } 
 rand_isaac = { version = "0.2.0", default-features = false }
-hex = { version = "0.4.0", default-features = false }
+hex = { version = "0.4.0", default-features = false, features = ["alloc"] }
 hashbrown = { version = "0.6.3", default-features = false, features = ["inline-more", "ahash"] }
 dot = { version = "0.1.4", optional = true }
 
