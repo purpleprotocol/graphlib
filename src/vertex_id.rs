@@ -6,7 +6,10 @@ pub struct VertexId([u8; 16]); // 128bit
 
 impl core::fmt::Debug for VertexId {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        write!(f, "VertexId({})", hex::encode(self.0))
+        let mut buff: [u8; 32] = [0 as u8; 32];
+        let _ = hex::encode_to_slice(self.0, &mut buff);
+        let s = core::str::from_utf8(&buff).unwrap();
+        write!(f, "VertexId({})", s)
     }
 }
 
