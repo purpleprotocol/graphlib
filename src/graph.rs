@@ -16,9 +16,6 @@ use core::fmt::Debug;
 use std::fmt::Debug;
 
 #[cfg(feature = "no_std")]
-use core::mem;
-
-#[cfg(feature = "no_std")]
 extern crate alloc;
 #[cfg(feature = "no_std")]
 use alloc::boxed::Box;
@@ -88,8 +85,6 @@ pub struct Graph<T> {
     /// Mapping between edges and labels
     edge_labels: HashMap<Edge, String>,
 }
-
-const DEFAULT_LABEL: &str = "";
 
 impl<T> Graph<T> {
     /// Creates a new graph.

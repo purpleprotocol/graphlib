@@ -72,7 +72,7 @@ impl<'a, T> Topo<'a, T> {
             }
             None => {
                 if check_cyclic && self.vertices.len() != self.iterable.vertex_count() {
-                    panic!(PANIC_MSG);
+                    panic!("{}", PANIC_MSG);
                 }
                 None
             }

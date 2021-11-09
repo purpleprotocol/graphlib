@@ -56,8 +56,6 @@ impl<'a, T> Iterator for Bfs<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            let mut next_ptr = None;
-
             if let Some(current_ptr) = &self.current_ptr {
                 // Yield current pointed value if
                 // it isn't in the visited stack.
@@ -80,7 +78,7 @@ impl<'a, T> Iterator for Bfs<'a, T> {
                 // Move to next root if possible and yield it.
                 if self.queue.is_empty() {
                     if let Some(next_root) = self.roots_stack.pop() {
-                        next_ptr = Some(next_root);
+                        self.current_ptr = Some(next_root);
                     } else {
                         // Break execution if there are no more roots
                         return None;
@@ -88,14 +86,10 @@ impl<'a, T> Iterator for Bfs<'a, T> {
                 } else {
                     // Pop item from queue and set it
                     // as the current pointer.
-                    next_ptr = self.queue.pop_front();
+                    self.current_ptr = self.queue.pop_front();
                 }
             } else {
                 return None;
-            }
-
-            if next_ptr.is_some() {
-                self.current_ptr = next_ptr;
             }
         }
     }
