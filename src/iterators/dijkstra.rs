@@ -119,16 +119,12 @@ impl<'a, T> Dijkstra<'a, T> {
         Ok(VertexIter(Box::new(iter::empty())))
     }
 
-    pub fn get_distance(&mut self, vert: &'a VertexId) -> Result<f32, GraphErr> {
+    pub fn get_distance(&self, vert: &'a VertexId) -> Result<f32, GraphErr> {
         if self.iterable.fetch(vert).is_none() {
             return Err(GraphErr::NoSuchVertex);
         }
 
-        if self.distances.contains_key(vert) {
-            return Ok(*self.distances.get(vert).unwrap());
-        }
-
-        Ok(f32::MAX)
+        Ok(self.distances.get(vert).copied().unwrap_or(f32::MAX))
     }
 
     fn calc_distances(&mut self) {
