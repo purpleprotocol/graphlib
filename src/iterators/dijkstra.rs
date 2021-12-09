@@ -52,7 +52,6 @@ impl Ord for VertexMeta {
 pub struct Dijkstra<'a, T> {
     source: &'a VertexId,
     iterable: &'a Graph<T>,
-    iterator: VecDeque<VertexId>,
     distances: HashMap<VertexId, f32>,
     previous: HashMap<VertexId, Option<VertexId>>,
 }
@@ -74,7 +73,6 @@ impl<'a, T> Dijkstra<'a, T> {
         let mut instance = Dijkstra {
             source: src,
             iterable: graph,
-            iterator: VecDeque::with_capacity(graph.vertex_count()),
             distances: HashMap::with_capacity(graph.vertex_count()),
             previous: HashMap::with_capacity(graph.vertex_count()),
         };
@@ -97,40 +95,36 @@ impl<'a, T> Dijkstra<'a, T> {
         Ok(())
     }
 
-    pub fn get_path_to(mut self, vert: &'a VertexId) -> Result<VertexIter, GraphErr> {
+    pub fn get_path_to(&self, vert: &'a VertexId) -> Result<VertexIter<'a>, GraphErr> {
         if self.iterable.fetch(vert).is_none() {
             return Err(GraphErr::NoSuchVertex);
         }
 
         if self.previous.contains_key(vert) {
             let mut cur_vert = Some(vert);
-            self.iterator.clear();
+            let mut iterator = VecDeque::new();
 
-            while cur_vert.is_some() {
-                self.iterator.push_front(*cur_vert.unwrap());
+            while let Some(cur_vert_inner) = cur_vert {
+                iterator.push_front(*cur_vert_inner);
 
-                match self.previous.get(cur_vert.unwrap()) {
+                match self.previous.get(cur_vert_inner) {
                     Some(v) => cur_vert = v.as_ref(),
                     None => cur_vert = None,
                 }
             }
 
-            return Ok(VertexIter(Box::new(OwningIterator::new(self.iterator))));
+            return Ok(VertexIter(Box::new(OwningIterator::new(iterator))));
         }
 
         Ok(VertexIter(Box::new(iter::empty())))
     }
 
-    pub fn get_distance(&mut self, vert: &'a VertexId) -> Result<f32, GraphErr> {
+    pub fn get_distance(&self, vert: &'a VertexId) -> Result<f32, GraphErr> {
         if self.iterable.fetch(vert).is_none() {
             return Err(GraphErr::NoSuchVertex);
         }
 
-        if self.distances.contains_key(vert) {
-            return Ok(*self.distances.get(vert).unwrap());
-        }
-
-        Ok(f32::MAX)
+        Ok(self.distances.get(vert).copied().unwrap_or(f32::MAX))
     }
 
     fn calc_distances(&mut self) {
