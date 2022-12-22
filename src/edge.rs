@@ -1,14 +1,14 @@
 // Copyright 2019 Octavian Oncescu
 
 use crate::vertex_id::VertexId;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::hash::Hash;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::hash::Hasher;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::hash::{Hash, Hasher};
 
 #[derive(Clone, Debug)]

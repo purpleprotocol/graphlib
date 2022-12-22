@@ -5,23 +5,23 @@ use crate::iterators::*;
 use crate::vertex_id::VertexId;
 use hashbrown::{HashMap, HashSet};
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::iter;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::iter;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::fmt::Debug;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::fmt::Debug;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::vec;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 #[cfg(feature = "dot")]

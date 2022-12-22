@@ -8,7 +8,7 @@ use crate::vertex_id::VertexId;
 use hashbrown::HashMap;
 use hashbrown::HashSet;
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::{
     cmp::Ordering,
     collections::{BinaryHeap, VecDeque},
@@ -17,14 +17,14 @@ use std::{
     iter,
 };
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::collections::{binary_heap::BinaryHeap, vec_deque::VecDeque};
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::{cmp::Ordering, f32, fmt::Debug, iter};
 
 #[derive(PartialEq, Debug)]

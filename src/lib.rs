@@ -70,6 +70,6 @@ pub(crate) fn gen_bytes() -> [u8; 16] {
     )))
 }
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 #[macro_use]
 extern crate alloc;

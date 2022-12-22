@@ -1,21 +1,21 @@
 use crate::{Graph, GraphErr, VertexId};
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::io::Write;
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::io::Write;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::borrow::Cow;
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::borrow::Cow;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::fmt::Debug;
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::fmt::Debug;
 
 type Nd = VertexId;
