@@ -27,6 +27,9 @@ use alloc::vec::Vec;
 #[cfg(feature = "dot")]
 use super::SEED;
 
+#[cfg(feature = "dot")]
+const DEFAULT_LABEL: &str = "";
+
 #[derive(Clone, Debug, PartialEq)]
 /// Graph operation error
 pub enum GraphErr {
