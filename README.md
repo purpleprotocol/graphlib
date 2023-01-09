@@ -7,6 +7,11 @@ Graphlib is a simple and powerful Rust graph library.
 
 This library attempts to provide a generic api for building, mutating and iterating over graphs that is similar to that of other data-structures found in Rust i.e. `Vec`, `HashMap`, `VecDeque`, etc. 
 
+## Modifications in this fork from the original
+1. Fix compilation error when dot feature is enabled.
+2. Replace no_std feature with a std feature (and reverse the default behavior).
+3. Remove the dependency on rand. This library causes problems in constrained environments that do not have access to an RNG.
+
 ### Using Graphlib
 ```rust
 use graphlib::Graph;
@@ -32,13 +37,6 @@ graph.remove(&id1);
 
 assert_eq!(graph.vertex_count(), 1);
 assert_eq!(graph.edge_count(), 0);
-```
-
-### Using without `std`
-In `Cargo.toml`:
-```toml
-[dependencies]
-graphlib = { version = "*", features = ["no_std"] }
 ```
 
 ### Contributing

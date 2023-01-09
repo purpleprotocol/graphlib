@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn it_yields_correct_vertex_ids() {
         let ids: VecDeque<VertexId> =
-            vec![VertexId::random(), VertexId::random(), VertexId::random()]
+            vec![VertexId::new(1), VertexId::new(2), VertexId::new(3)]
                 .iter()
                 .cloned()
                 .collect();

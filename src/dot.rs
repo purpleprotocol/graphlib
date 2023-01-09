@@ -1,22 +1,10 @@
 use crate::{Graph, GraphErr, VertexId};
 
 #[cfg(not(feature = "std"))]
-use core::io::Write;
-
-#[cfg(feature = "std")]
-use std::io::Write;
-
-#[cfg(not(feature = "std"))]
-use core::borrow::Cow;
+use alloc::borrow::Cow;
 
 #[cfg(feature = "std")]
 use std::borrow::Cow;
-
-#[cfg(not(feature = "std"))]
-use core::fmt::Debug;
-
-#[cfg(feature = "std")]
-use std::fmt::Debug;
 
 type Nd = VertexId;
 type Ed<'a> = (&'a VertexId, &'a VertexId);
@@ -43,7 +31,7 @@ impl<'a, T> dot::Labeller<'a, Nd, Ed<'a>> for DotGraph<'a, T> {
     }
 
     fn node_id(&'a self, n: &Nd) -> dot::Id<'a> {
-        let hex = format!("N{}", hex::encode(n.bytes()));
+        let hex = format!("N{}", n.val());
         dot::Id::new(hex).unwrap()
     }
 

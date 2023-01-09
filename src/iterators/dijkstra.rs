@@ -184,7 +184,7 @@ mod tests {
 
     #[test]
     fn test_new_with_empty_graph() {
-        let random_vertex = VertexId::random();
+        let random_vertex = VertexId::new(100);
 
         let graph: Graph<usize> = Graph::new();
         let result = Dijkstra::new(&graph, &random_vertex);
@@ -194,7 +194,7 @@ mod tests {
 
     #[test]
     fn test_new_with_invalid_source() {
-        let random_vertex = VertexId::random();
+        let random_vertex = VertexId::new(100);
 
         let mut graph: Graph<usize> = Graph::new();
         let v1 = graph.add_vertex(1);
@@ -222,7 +222,7 @@ mod tests {
 
     #[test]
     fn test_set_source_with_invalid_vertex() {
-        let random_vertex = VertexId::random();
+        let random_vertex = VertexId::new(100);
 
         let mut graph: Graph<usize> = Graph::new();
         let v1 = graph.add_vertex(1);
@@ -237,7 +237,7 @@ mod tests {
 
     #[test]
     fn test_get_path_to_with_invalid_vertex() {
-        let random_vertex = VertexId::random();
+        let random_vertex = VertexId::new(100);
 
         let mut graph: Graph<usize> = Graph::new();
         let v1 = graph.add_vertex(1);
@@ -252,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_get_distance_with_invalid_vertex() {
-        let random_vertex = VertexId::random();
+        let random_vertex = VertexId::new(100);
 
         let mut graph: Graph<usize> = Graph::new();
         let v1 = graph.add_vertex(1);

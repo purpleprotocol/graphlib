@@ -2,7 +2,7 @@
 name = "graphlib"
 version = "0.6.3"
 authors = ["Octavian Oncescu <octavonce@gmail.com>"]
-edition = "2018"
+edition = "2021"
 repository = "https://github.com/purpleprotocol/graphlib"
 keywords = ["graph", "data-structures", "mutable", "graph-algorithm", "no-std"]
 categories = ["data-structures", "no-std"]
@@ -14,22 +14,28 @@ readme = "README.md"
 travis-ci = { repository = "purpleprotocol/graphlib", branch = "master" }
 
 [dependencies]
-rand = { version = "0.7.3", default-features = false }
-rand_core = { version = "0.5.1", default-features = false } 
-rand_isaac = { version = "0.2.0", default-features = false }
-hex = { version = "0.4.0", default-features = false }
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 hashbrown = { version = "0.6.3", default-features = false, features = ["inline-more", "ahash"] }
-dot = { version = "0.1.4", optional = true }
+dot = { version = "0.1.4", default-features = false, optional = true }
 
 [dev-dependencies]
 criterion = "0.3.0"
+
+[lib]
+name = "graphlib"
+path = "src/lib.rs"
+crate-type = [
+    "lib",
+]
 
 [[bench]]
 name = "benchmark"
 harness = false
 
 [features]
-default = ["hashbrown/nightly"]
+# std needs to be a default feature or else you get the following error:
+# ink! only supports compilation as `std` or `no_std` + `wasm32-unknown`"
+default = ["hashbrown/nightly", "std"]
 # use `cargo bench --features sbench` only if you want benchmarks with 10 million
 # iterations (may fail on some systems)
 sbench = []
