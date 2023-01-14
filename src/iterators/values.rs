@@ -1,8 +1,8 @@
 // Copyright 2019 Octavian Oncescu
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
 
 /// Generic values Iterator.

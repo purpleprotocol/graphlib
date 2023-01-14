@@ -1,13 +1,13 @@
 // Copyright 2019 Octavian Oncescu
 
 use crate::vertex_id::VertexId;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::fmt::Debug;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::fmt::Debug;
 
 pub(crate) trait MergedTrait<'a>: Iterator<Item = &'a VertexId> + Debug {}

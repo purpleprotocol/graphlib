@@ -2,14 +2,12 @@
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 /// Id of a vertex
-pub struct VertexId([u8; 16]); // 128bit
+// pub struct VertexId([u8; 16]); // 128bit
+pub struct VertexId(u32);
 
 impl core::fmt::Debug for VertexId {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        let mut buff: [u8; 32] = [0 as u8; 32];
-        let _ = hex::encode_to_slice(self.0, &mut buff);
-        let s = core::str::from_utf8(&buff).unwrap();
-        write!(f, "VertexId({})", s)
+        write!(f, "VertexId({})", self.0)
     }
 }
 
@@ -20,11 +18,16 @@ impl core::convert::AsRef<VertexId> for VertexId {
 }
 
 impl VertexId {
-    pub fn random() -> VertexId {
-        VertexId(super::gen_bytes())
+
+    /// This is an unsafe function and generally should not be used!
+    /// It's made public for use largely in test contexts.
+    /// Otherwise you may risk creating two identical VertexId's in a graph
+    /// Use Graph::add_vertex(...) instead
+    pub fn new(val: u32) -> Self {
+        Self{0: val}
     }
 
-    pub fn bytes(&self) -> &[u8; 16] {
-        &self.0
+    pub(crate) fn val(&self) -> u32 {
+        self.0
     }
 }

@@ -2,25 +2,25 @@
 
 use crate::vertex_id::VertexId;
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::fmt::Debug;
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::marker::PhantomData;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::marker::PhantomData;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::mem;
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::mem;
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::collections::VecDeque;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::collections::VecDeque;
 
 /// Iterator that owns the data.
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn it_yields_correct_vertex_ids() {
         let ids: VecDeque<VertexId> =
-            vec![VertexId::random(), VertexId::random(), VertexId::random()]
+            vec![VertexId::new(1), VertexId::new(2), VertexId::new(3)]
                 .iter()
                 .cloned()
                 .collect();

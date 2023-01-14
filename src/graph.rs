@@ -5,27 +5,28 @@ use crate::iterators::*;
 use crate::vertex_id::VertexId;
 use hashbrown::{HashMap, HashSet};
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::iter;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::iter;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::fmt::Debug;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::fmt::Debug;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::vec;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
+
 #[cfg(feature = "dot")]
-use super::SEED;
+const DEFAULT_LABEL: &str = "";
 
 #[derive(Clone, Debug, PartialEq)]
 /// Graph operation error
@@ -77,6 +78,8 @@ pub struct Graph<T> {
     /// Mapping between vertex ids and outbound edges
     outbound_table: HashMap<VertexId, Vec<VertexId>>,
 
+    next_vertex_id: u32,
+
     #[cfg(feature = "dot")]
     /// Mapping between vertices and labels
     vertex_labels: HashMap<VertexId, String>,
@@ -106,6 +109,7 @@ impl<T> Graph<T> {
             tips: HashSet::new(),
             inbound_table: HashMap::new(),
             outbound_table: HashMap::new(),
+            next_vertex_id: 1,
 
             #[cfg(feature = "dot")]
             vertex_labels: HashMap::new(),
@@ -136,6 +140,7 @@ impl<T> Graph<T> {
             tips: HashSet::with_capacity(capacity),
             inbound_table: HashMap::with_capacity(capacity),
             outbound_table: HashMap::with_capacity(capacity),
+            next_vertex_id: 1,
 
             #[cfg(feature = "dot")]
             vertex_labels: HashMap::with_capacity(capacity),
@@ -261,7 +266,10 @@ impl<T> Graph<T> {
     /// assert_eq!(graph.fetch(&id).unwrap(), &1);
     /// ```
     pub fn add_vertex(&mut self, item: T) -> VertexId {
-        let id = VertexId::random();
+        let id = VertexId::new(self.next_vertex_id);
+        // This library is clearly not thread-safe, so we do not bother
+        // using an atomic int
+        self.next_vertex_id += 1;
 
         self.vertices.insert(id, (item, id));
         self.roots.insert(id);
@@ -279,7 +287,7 @@ impl<T> Graph<T> {
     /// let mut graph: Graph<usize> = Graph::new();
     ///
     /// // Id of vertex that is not place in the graph
-    /// let id = VertexId::random();
+    /// let id = VertexId::new(100);
     ///
     /// let v1 = graph.add_vertex(1);
     /// let v2 = graph.add_vertex(2);
@@ -313,7 +321,7 @@ impl<T> Graph<T> {
     /// let mut graph: Graph<usize> = Graph::new();
     ///
     /// // Id of vertex that is not place in the graph
-    /// let id = VertexId::random();
+    /// let id = VertexId::new(100);
     ///
     /// let v1 = graph.add_vertex(1);
     /// let v2 = graph.add_vertex(2);
@@ -344,7 +352,7 @@ impl<T> Graph<T> {
     /// let mut graph: Graph<usize> = Graph::new();
     ///
     /// // Id of vertex that is not place in the graph
-    /// let id = VertexId::random();
+    /// let id = VertexId::new(100);
     ///
     /// let v1 = graph.add_vertex(1);
     /// let v2 = graph.add_vertex(2);
@@ -382,7 +390,7 @@ impl<T> Graph<T> {
     /// let mut graph: Graph<usize> = Graph::new();
     ///
     /// // Id of vertex that is not place in the graph
-    /// let id = VertexId::random();
+    /// let id = VertexId::new(100);
     ///
     /// let v1 = graph.add_vertex(1);
     /// let v2 = graph.add_vertex(2);
@@ -417,7 +425,7 @@ impl<T> Graph<T> {
     /// let mut graph: Graph<usize> = Graph::new();
     ///
     /// // Id of vertex that is not place in the graph
-    /// let id = VertexId::random();
+    /// let id = VertexId::new(100);
     ///
     /// let v1 = graph.add_vertex(1);
     /// let v2 = graph.add_vertex(2);
@@ -1368,7 +1376,7 @@ impl<T> Graph<T> {
     /// use graphlib::{Graph, VertexId};
     ///
     /// let mut graph: Graph<usize> = Graph::new();
-    /// let random_id = VertexId::random();
+    /// let random_id = VertexId::new(100);
     ///
     /// let v1 = graph.add_vertex(0);
     /// let v2 = graph.add_vertex(1);
@@ -1400,7 +1408,7 @@ impl<T> Graph<T> {
     /// use graphlib::{Graph, VertexId};
     ///
     /// let mut graph: Graph<usize> = Graph::new();
-    /// let random_id = VertexId::random();
+    /// let random_id = VertexId::new(100);
     ///
     /// let v1 = graph.add_vertex(0);
     /// let v2 = graph.add_vertex(1);
@@ -1468,7 +1476,7 @@ impl<T> Graph<T> {
     /// use graphlib::{Graph, VertexId};
     ///
     /// let mut graph: Graph<usize> = Graph::new();
-    /// let random_id = VertexId::random();
+    /// let random_id = VertexId::new(100);
     /// let mut vertex_id: usize = 1;
     ///
     /// let v1 = graph.add_vertex(0);
@@ -1523,7 +1531,7 @@ impl<T> Graph<T> {
     /// use graphlib::{Graph, VertexId};
     ///
     /// let mut graph: Graph<usize> = Graph::new();
-    /// let random_id = VertexId::random();
+    /// let random_id = VertexId::new(100);
     /// let mut vertex_id: usize = 1;
     ///
     /// let v1 = graph.add_vertex(0);
@@ -1839,9 +1847,6 @@ mod tests {
     #[test]
     fn test_add_edge_cycle_check() {
         let mut graph: Graph<usize> = Graph::new();
-
-        // Id of vertex that is not place in the graph
-        let id = VertexId::random();
 
         let v1 = graph.add_vertex(1);
         let v2 = graph.add_vertex(2);

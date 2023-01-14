@@ -5,13 +5,13 @@ use crate::vertex_id::VertexId;
 
 use hashbrown::HashMap;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::fmt::Debug;
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::fmt::Debug;
 
 const PANIC_MSG: &str = "graph contains cycle(s)";

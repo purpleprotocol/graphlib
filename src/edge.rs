@@ -1,14 +1,14 @@
 // Copyright 2019 Octavian Oncescu
 
 use crate::vertex_id::VertexId;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::hash::Hash;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::hash::Hasher;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::hash::{Hash, Hasher};
 
 #[derive(Clone, Debug)]
@@ -40,12 +40,14 @@ impl Edge {
 
     /// Returns true if the given vertex ids are the
     /// inbound and outbound vertices of the edge.
+    #[allow(dead_code)]
     pub(crate) fn matches(&self, a: &VertexId, b: &VertexId) -> bool {
         a == &self.outbound && b == &self.inbound
     }
 
     /// Returns true if either the inbound or outbound
     /// vertex is matching the given `VertexId`.
+    #[allow(dead_code)]
     pub(crate) fn matches_any(&self, id: &VertexId) -> bool {
         id == &self.inbound || id == &self.outbound
     }

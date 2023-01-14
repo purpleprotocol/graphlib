@@ -4,21 +4,21 @@ use crate::graph::Graph;
 use crate::vertex_id::VertexId;
 
 use hashbrown::HashSet;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::collections::VecDeque;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::collections::vec_deque::VecDeque;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 use core::fmt::Debug;
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::fmt::Debug;
 
 #[derive(Debug)]
